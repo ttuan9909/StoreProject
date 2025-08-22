@@ -31,6 +31,11 @@ public class User {
         this.positionId = positionId;
     }
 
+    public User(String username, String password) {
+        this.userName = userName;
+        this.password = password;
+    }
+
     public int getUserId() {
         return userId;
     }

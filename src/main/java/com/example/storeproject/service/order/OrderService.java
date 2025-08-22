@@ -22,12 +22,12 @@ public class OrderService implements IOrderService {
 
     @Override
     public List<OrderDetail> getDetails(int orderId) {
-        return orderRepository.getOrderDetail(orderId); // sửa lỗi đệ quy
+        return orderRepository.getOrderDetail(orderId);
     }
 
     @Override
     public boolean approve(int orderId) {
-        return orderRepository.updateStatus(orderId, 1); // trạng thái duyệt = 1 (int)
+        return orderRepository.updateStatus(orderId, String.valueOf(1));
     }
 
     @Override

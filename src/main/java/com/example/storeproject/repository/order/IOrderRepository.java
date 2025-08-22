@@ -12,7 +12,7 @@ public interface IOrderRepository {
 
     List<OrderDetail> getOrderDetail(int orderId);
 
-    boolean updateStatus(int orderId, int status);
+    boolean updateStatus(int orderId, String status);
 
     boolean deleteProductFromOrder(int orderId, int productId);
 }
