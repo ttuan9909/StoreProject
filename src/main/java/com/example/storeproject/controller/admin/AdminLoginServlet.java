@@ -10,13 +10,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet("/admin/login")
+@WebServlet(urlPatterns = {"/admin/login"})
 public class AdminLoginServlet extends HttpServlet {
     private final AdminService adminService = new AdminService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Thêm "/" để forward tuyệt đối
         req.getRequestDispatcher("/admin/Login.jsp").forward(req, resp);
     }
 
