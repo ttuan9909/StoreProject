@@ -1,8 +1,8 @@
 package com.example.storeproject.service.admin;
 
-import com.example.storeproject.entity.admin.Admin;
+import com.example.storeproject.entity.User;
 
 public interface IAdminService {
-    boolean registerAdmin(Admin admin);
-    Admin loginAdmin(String email, String password);
+    boolean registerAdmin(User user);
+    User loginAdmin(String username, String password);
 }

@@ -1,6 +1,6 @@
 package com.example.storeproject.controller.admin;
 
-import com.example.storeproject.entity.admin.Admin;
+import com.example.storeproject.entity.User;
 import com.example.storeproject.service.admin.AdminService;
 
 import javax.servlet.ServletException;
@@ -24,7 +24,7 @@ public class AdminRegisterServlet extends HttpServlet {
         String username = req.getParameter("username");
         String password = req.getParameter("password");
 
-        boolean success = adminService.registerAdmin(new Admin(username, password));
+        boolean success = adminService.registerAdmin(new User(username, password));
         if (success) {
             req.setAttribute("success", "Register successfully!");
         } else {

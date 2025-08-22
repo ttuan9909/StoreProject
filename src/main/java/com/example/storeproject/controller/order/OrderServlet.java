@@ -1,7 +1,7 @@
 package com.example.storeproject.controller.order;
 
-import com.example.storeproject.entity.order.Order;
-import com.example.storeproject.entity.order.OrderDetail;
+import com.example.storeproject.entity.Order;
+import com.example.storeproject.entity.OrderDetail;
 import com.example.storeproject.service.order.IOrderService;
 import com.example.storeproject.service.order.OrderService;
 
@@ -39,14 +39,16 @@ public class OrderServlet extends HttpServlet {
         String action = req.getParameter("action");
 
         if ("approve".equals(action)) {
-            int orderId = Integer.parseInt(req.getParameter("id"));
+            // đổi từ "id" -> "orderId" cho đúng với model
+            int orderId = Integer.parseInt(req.getParameter("orderId"));
             orderService.approve(orderId);
             resp.sendRedirect("order");
         } else if ("removeProduct".equals(action)) {
             int orderId = Integer.parseInt(req.getParameter("orderId"));
             int productId = Integer.parseInt(req.getParameter("productId"));
             orderService.removeProduct(orderId, productId);
-            resp.sendRedirect("order?action=detail&id=" + orderId);
+            // sửa tham số redirect từ id -> orderId
+            resp.sendRedirect("order?action=detail&orderId=" + orderId);
         }
     }
 }

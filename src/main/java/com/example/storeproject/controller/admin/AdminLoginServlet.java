@@ -1,6 +1,6 @@
 package com.example.storeproject.controller.admin;
 
-import com.example.storeproject.entity.admin.Admin;
+import com.example.storeproject.entity.User;
 import com.example.storeproject.service.admin.AdminService;
 
 import javax.servlet.ServletException;
@@ -16,7 +16,8 @@ public class AdminLoginServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.getRequestDispatcher("admin/Login.jsp").forward(req, resp);
+        // Thêm "/" để forward tuyệt đối
+        req.getRequestDispatcher("/admin/Login.jsp").forward(req, resp);
     }
 
     @Override
@@ -24,9 +25,11 @@ public class AdminLoginServlet extends HttpServlet {
         String username = req.getParameter("username");
         String password = req.getParameter("password");
 
-        Admin admin = adminService.loginAdmin(username, password);
-        if (admin != null) {
-            req.getSession().setAttribute("admin_username", admin.getAdmin_username());
+        User user = adminService.loginAdmin(username, password);
+        if (user != null) {
+            // model User có field userName -> dùng getUserName()
+            req.getSession().setAttribute("admin_username", user.getUserName());
+            // giữ nguyên redirect tương đối tới /admin/Welcome.jsp
             resp.sendRedirect("Welcome.jsp");
         } else {
             req.setAttribute("error", "Login failed!");

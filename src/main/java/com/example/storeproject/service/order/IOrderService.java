@@ -1,7 +1,7 @@
 package com.example.storeproject.service.order;
 
-import com.example.storeproject.entity.order.Order;
-import com.example.storeproject.entity.order.OrderDetail;
+import com.example.storeproject.entity.Order;
+import com.example.storeproject.entity.OrderDetail;
 
 import java.util.List;
 

@@ -1,19 +1,17 @@
-package com.example.storeproject.entity.order;
+package com.example.storeproject.entity;
 
 public class OrderDetail {
     private int orderId;
     private int productId;
-    private String productName;
     private int quantity;
     private double price;
 
     public OrderDetail() {
     }
 
-    public OrderDetail(int orderId, int productId, String productName, int quantity, double price) {
+    public OrderDetail(int orderId, int productId, int quantity, double price) {
         this.orderId = orderId;
         this.productId = productId;
-        this.productName = productName;
         this.quantity = quantity;
         this.price = price;
     }
@@ -32,14 +30,6 @@ public class OrderDetail {
 
     public void setProductId(int productId) {
         this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
     }
 
     public int getQuantity() {

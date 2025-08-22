@@ -3,7 +3,6 @@
   User: LEDAT
   Date: 8/22/2025
   Time: 12:14 PM
-  To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -14,7 +13,7 @@
 <body>
 <h2>All Orders</h2>
 
-<form action="" method="get">
+<form action="${pageContext.request.contextPath}/admin/order" method="get">
   <input type="text" name="keyword" placeholder="Search by order ID or customer name"/>
   <input type="submit" value="Search"/>
 </form>
@@ -33,17 +32,23 @@
   <tbody>
   <c:forEach items="${orders}" var="o">
     <tr>
-      <td>${o.id}</td>
+      <td>${o.orderId}</td>
       <td>${o.customerName}</td>
       <td>${o.createdAt}</td>
-      <td>${o.status}</td>
+      <td>
+        <c:choose>
+          <c:when test="${o.status == 0}">Chờ xử lý</c:when>
+          <c:when test="${o.status == 1}">Đã duyệt</c:when>
+          <c:otherwise>Khác</c:otherwise>
+        </c:choose>
+      </td>
       <td>${o.total}</td>
       <td>
-        <a href="?action=detail&id=${o.id}">View Detail</a>
-        <c:if test="${o.status eq 'cho_xu_ly'}">
-          <form action="" method="post" style="display:inline">
+        <a href="${pageContext.request.contextPath}/admin/order?action=detail&orderId=${o.orderId}">View Detail</a>
+        <c:if test="${o.status == 0}">
+          <form action="${pageContext.request.contextPath}/admin/order" method="post" style="display:inline">
             <input type="hidden" name="action" value="approve"/>
-            <input type="hidden" name="id" value="${o.id}"/>
+            <input type="hidden" name="orderId" value="${o.orderId}"/>
             <input type="submit" value="Approve"/>
           </form>
         </c:if>
@@ -55,4 +60,3 @@
 
 </body>
 </html>
-
