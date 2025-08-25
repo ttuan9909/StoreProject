@@ -181,7 +181,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">Đăng nhập</a>
+                    <a href="${pageContext.request.contextPath}/login?redirect=${pageContext.request.requestURI}" class="btn btn-primary">Đăng nhập</a>
                 </div>
             </div>
         </div>
@@ -192,21 +192,47 @@
         // Add to cart functionality
         document.querySelectorAll('.add-to-cart-btn').forEach(button => {
             button.addEventListener('click', function() {
-                // Check if user is logged in (you can implement this check)
-                const isLoggedIn = false; // This should be set based on your authentication logic
-                
+                const isLoggedIn = ${sessionScope.currentUser != null};
                 if (!isLoggedIn) {
-                    // Show login modal
                     const modal = new bootstrap.Modal(document.getElementById('addToCartModal'));
+                    const loginLink = document.querySelector('#addToCartModal a.btn-primary');
+                    loginLink.href = '${pageContext.request.contextPath}/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
                     modal.show();
                 } else {
-                    // Add to cart logic
                     const productId = this.dataset.productId;
                     const productName = this.dataset.productName;
                     const productPrice = this.dataset.productPrice;
-                    
-                    // You can implement AJAX call to add to cart here
-                    console.log('Adding to cart:', {productId, productName, productPrice});
+
+                    const formData = new URLSearchParams();
+                    formData.append('action', 'add');
+                    formData.append('productId', productId);
+                    formData.append('quantity', 1);
+
+                    fetch('${pageContext.request.contextPath}/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.text().then(text => {  // Đọc text nếu không OK
+                                    throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}...`);  // Debug body
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                            } else {
+                                alert('Lỗi: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Lỗi kết nối: ' + error.message);
+                        });
+                    console.log(productId + productName + productPrice + "đã thêm");
                 }
             });
         });

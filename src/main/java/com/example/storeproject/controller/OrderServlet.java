@@ -27,8 +27,18 @@ public class OrderServlet extends HttpServlet {
         
         HttpSession session = request.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
-        
+        System.out.println("OrderServlet doGet: Session ID: " + session.getId());
+        System.out.println("OrderServlet doGet: userId from session: " + userId);
+
         if (userId == null) {
+            // Lưu URL gốc (bao gồm query string nếu có)
+            String currentUrl = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                currentUrl += "?" + request.getQueryString();
+            }
+            System.out.println("OrderServlet doGet: No userId, saving redirect: " + currentUrl);
+            session.setAttribute("redirectAfterLogin", currentUrl);
+
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -49,9 +59,19 @@ public class OrderServlet extends HttpServlet {
         
         HttpSession session = request.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
-        
+        System.out.println("OrderServlet doPost: Session ID: " + session.getId());
+        System.out.println("OrderServlet doPost: userId from session: " + userId);
+
         if (userId == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            // Lưu URL gốc (bao gồm query string nếu có)
+            String currentUrl = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                currentUrl += "?" + request.getQueryString();
+            }
+            System.out.println("OrderServlet doPost: No userId, saving redirect: " + currentUrl);
+            session.setAttribute("redirectAfterLogin", currentUrl);
+
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
         

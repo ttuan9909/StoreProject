@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "CartServlet", urlPatterns = {"/cart", "/cart/*"})
+@WebServlet(name = "CartServlet", urlPatterns = {"/cart", "/cart/*", "/cart/add"})
 public class CartServlet extends HttpServlet {
     private final ICartService cartService;
     private final IProductService productService;
@@ -32,8 +32,18 @@ public class CartServlet extends HttpServlet {
         
         HttpSession session = request.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
-        
+        System.out.println("CartServlet doGet: Session ID: " + session.getId());
+        System.out.println("CartServlet doGet: userId from session: " + userId);
+
         if (userId == null) {
+            // Lưu URL gốc (bao gồm query string nếu có)
+            String currentUrl = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                currentUrl += "?" + request.getQueryString();
+            }
+            System.out.println("CartServlet doGet: No userId, saving redirect: " + currentUrl);
+            session.setAttribute("redirectAfterLogin", currentUrl);
+
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -52,9 +62,19 @@ public class CartServlet extends HttpServlet {
         
         HttpSession session = request.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
-        
+        System.out.println("CartServlet doPost: Session ID: " + session.getId());
+        System.out.println("CartServlet Method…: userId from session: " + userId);
+
         if (userId == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            // Lưu URL gốc (bao gồm query string nếu có)
+            String currentUrl = request.getRequestURI();
+            if (request.getQueryString() != null) {
+                currentUrl += "?" + request.getQueryString();
+            }
+            System.out.println("CartServlet Method doPost: No userId, saving redirect: " + currentUrl);
+            session.setAttribute("redirectAfterLogin", currentUrl);
+
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
         
@@ -97,26 +117,38 @@ public class CartServlet extends HttpServlet {
         
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-            
+            int quantity = request.getParameter("quantity") != null ? Integer.parseInt(request.getParameter("quantity")) : 1;
+
+            System.out.println("CartServlet: Received parameters - productId=" + request.getParameter("productId") + ", quantity=" + request.getParameter("quantity"));  // Debug parameter
+
+            // Kiểm tra sản phẩm tồn tại
             Product product = productService.getProductById(productId);
-            if (product != null && quantity > 0) {
-                boolean success = cartService.addProductToCart(userId, productId, quantity, product.getPrice());
-                
-                if (success) {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": true, \"message\": \"Sản phẩm đã được thêm vào giỏ hàng\"}");
-                } else {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": false, \"message\": \"Không thể thêm sản phẩm vào giỏ hàng\"}");
-                }
+            if (product == null) {
+                System.out.println("CartServlet: Product not found for ID: " + productId);  // Debug
+                response.getWriter().write("{\"success\": false, \"message\": \"Sản phẩm không tồn tại.\"}");
+                return;
+            }
+
+            if (quantity > product.getQuantity()) {
+                System.out.println("CartServlet: Quantity exceeds stock: requested=" + quantity + ", available=" + product.getQuantity());  // Debug
+                response.getWriter().write("{\"success\": false, \"message\": \"Số lượng không đủ.\"}");
+                return;
+            }
+
+            // Thêm vào giỏ (cartService.addToCart sẽ handle trùng lặp)
+            boolean success = cartService.addProductToCart(userId, productId, quantity, product.getPrice());  // Sử dụng price từ product
+
+            if (success) {
+                response.getWriter().write("{\"success\": true, \"message\": \"Thêm vào giỏ hàng thành công!\"}");
             } else {
-                response.setContentType("application/json");
-                response.getWriter().write("{\"success\": false, \"message\": \"Thông tin sản phẩm không hợp lệ\"}");
+                response.getWriter().write("{\"success\": false, \"message\": \"Không thể thêm vào giỏ hàng.\"}");
             }
         } catch (NumberFormatException e) {
-            response.setContentType("application/json");
-            response.getWriter().write("{\"success\": false, \"message\": \"Dữ liệu không hợp lệ\"}");
+            System.out.println("CartServlet: NumberFormatException: " + e.getMessage());  // Debug
+            response.getWriter().write("{\"success\": false, \"message\": \"Dữ liệu không hợp lệ.\"}");
+        } catch (Exception e) {
+            System.out.println("CartServlet: Unexpected error: " + e.getMessage() + ", stacktrace: " + e.getStackTrace()[0]);  // Debug chi tiết
+            response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra khi thêm sản phẩm.\"}");
         }
     }
     
