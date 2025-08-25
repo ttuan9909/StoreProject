@@ -3,8 +3,8 @@ package com.example.storeproject.entity;
 import java.time.LocalDate;
 
 public class User {
-    private int userId;
-    private String userName;
+    private Integer userId;
+    private String userName;   // CHÚ Ý: trùng với getter getUserName()
     private String password;
     private String fullName;
     private String email;
@@ -12,35 +12,21 @@ public class User {
     private String address;
     private String role;
     private LocalDate createdAt;
-
     private Integer positionId;
 
     public User() {
     }
 
-    public User(int userId, String userName, String password, String fullName, String email, String phone, String address, String role, LocalDate createdAt, Integer positionId) {
-        this.userId = userId;
-        this.userName = userName;
-        this.password = password;
-        this.fullName = fullName;
-        this.email = email;
-        this.phone = phone;
-        this.address = address;
-        this.role = role;
-        this.createdAt = createdAt;
-        this.positionId = positionId;
-    }
-
-    public User(String username, String password) {
+    public User(String userName, String password) {
         this.userName = userName;
         this.password = password;
     }
 
-    public int getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
