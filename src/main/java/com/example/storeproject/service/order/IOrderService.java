@@ -10,6 +10,4 @@ public interface IOrderService {
     Order getOrderById(int orderId);
     List<OrderDetail> getOrderDetails(int orderId);
     boolean updateOrderStatus(int orderId, String status);
-
-
 }
