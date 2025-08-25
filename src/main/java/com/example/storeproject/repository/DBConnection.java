@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBConnection {
     private static final String URL ="jdbc:mysql://localhost:3306/webshop"; // sửa lại tên của csdl
     private static final String USER ="root";// mặc định của mysql
-    private static final String PASS ="namkute";// do cài đặt khi cài đặt mysql
+    private static final String PASS ="tuan99203";// do cài đặt khi cài đặt mysql
     public static Connection getConnectDB(){
         Connection connection = null;
         try {

@@ -1,32 +1,31 @@
-package com.example.storeproject.entity;
+package com.example.storeproject.dto;
 
 import java.time.LocalDate;
 
-public class Product {
+public class ProductDto {
     private int productId;
     private String productName;
     private double price;
     private String description;
     private int quantity;
     private String image;
-    private Integer categoryId;
+    private String categoryName;
     private LocalDate dateCreated;
+    private Integer categoryId;
 
-    public Product() {
+
+    public ProductDto() {
     }
 
-    public Product(int productId, String productName, double price, String description, int quantity, String image, Integer categoryId, LocalDate dateCreated) {
+    public ProductDto(int productId, String productName, double price, String description, int quantity, String image, String categoryName, LocalDate dateCreated) {
         this.productId = productId;
         this.productName = productName;
         this.price = price;
         this.description = description;
         this.quantity = quantity;
         this.image = image;
-        this.categoryId = categoryId;
+        this.categoryName = categoryName;
         this.dateCreated = dateCreated;
-    }
-
-    public Product(int i, String name, double price, String description, int quantity, String image, int categoryId) {
     }
 
     public int getProductId() {
@@ -77,12 +76,12 @@ public class Product {
         this.image = image;
     }
 
-    public Integer getCategoryId() {
-        return categoryId;
+    public String getCategoryName() {
+        return categoryName;
     }
 
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public LocalDate getDateCreated() {
@@ -91,5 +90,13 @@ public class Product {
 
     public void setDateCreated(LocalDate dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 }
