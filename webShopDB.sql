@@ -1,0 +1,166 @@
+create database if not exists webshop;
+use webshop;
+
+create table vi_tri (
+    ma_vi_tri int primary key,
+    ten_vi_tri varchar(45)
+);
+
+create table nguoi_dung (
+    ma_nguoi_dung int auto_increment primary key,
+    ten_dang_nhap varchar(50) unique not null,
+    mat_khau varchar(255) not null,
+    email varchar(100) unique,
+    ho_ten varchar(100),
+    so_dien_thoai varchar(20),
+    dia_chi varchar(255),
+    vai_tro enum('admin', 'staff', 'customer') default 'customer',
+    ngay_tao datetime default current_timestamp,
+    ma_vi_tri int,
+    foreign key (ma_vi_tri) references vi_tri(ma_vi_tri)
+);
+
+create table danh_muc (
+    ma_danh_muc int auto_increment primary key,
+    ten_danh_muc varchar(100) not null
+);
+
+create table san_pham (
+    ma_san_pham int auto_increment primary key,
+    ten_san_pham varchar(150) not null,
+    gia decimal(10,2) not null,
+    so_luong int default 0,
+    mo_ta text,
+    hinh_anh varchar(255),
+    ma_danh_muc int,
+    ngay_tao datetime default current_timestamp,
+    foreign key (ma_danh_muc) references danh_muc(ma_danh_muc)
+);
+
+create table khuyen_mai (
+    ma_khuyen_mai int auto_increment primary key,
+    ten_khuyen_mai varchar(100),
+    mo_ta text,
+    giam_phan_tram int check (giam_phan_tram between 0 and 100),
+    ngay_bat_dau date,
+    ngay_ket_thuc date
+);
+
+create table don_hang (
+    ma_don_hang int auto_increment primary key,
+    ma_nguoi_dung int,
+    ngay_dat datetime default current_timestamp,
+    trang_thai enum('cho_xu_ly','dang_xu_ly','hoan_thanh','huy') default 'cho_xu_ly',
+    tong_tien decimal(10,2),
+    ma_khuyen_mai int,
+    foreign key (ma_nguoi_dung) references nguoi_dung(ma_nguoi_dung),
+    foreign key (ma_khuyen_mai) references khuyen_mai(ma_khuyen_mai)
+);
+
+create table chi_tiet_don_hang (
+    ma_don_hang int,
+    ma_san_pham int,
+    so_luong int not null,
+    gia decimal(10,2) not null,
+    primary key (ma_don_hang, ma_san_pham),
+    foreign key (ma_don_hang) references don_hang(ma_don_hang),
+    foreign key (ma_san_pham) references san_pham(ma_san_pham)
+);
+
+create table thanh_toan (
+    ma_thanh_toan int auto_increment primary key,
+    ma_don_hang int,
+    phuong_thuc enum('tien_mat', 'chuyen_khoan', 'vi_dien_tu') not null,
+    ngay_thanh_toan datetime default current_timestamp,
+    so_tien decimal(10,2),
+    trang_thai enum('da_thanh_toan', 'chua_thanh_toan') default 'chua_thanh_toan',
+    foreign key (ma_don_hang) references don_hang(ma_don_hang)
+);
+
+-- BẢNG GIỎ HÀNG
+create table gio_hang (
+    ma_gio_hang int auto_increment primary key,
+    ma_nguoi_dung int not null,
+    ngay_tao datetime default current_timestamp,
+    ngay_cap_nhat datetime default current_timestamp on update current_timestamp,
+    unique key uk_cart_user (ma_nguoi_dung), -- mỗi user 1 giỏ
+    constraint fk_cart_user
+        foreign key (ma_nguoi_dung) references nguoi_dung(ma_nguoi_dung)
+        on delete cascade
+);
+
+-- CÁC DÒNG SẢN PHẨM TRONG GIỎ
+create table chi_tiet_gio_hang (
+    ma_gio_hang int not null,
+    ma_san_pham int not null,
+    so_luong int not null check (so_luong > 0),
+    gia decimal(10,2) null, 
+    primary key (ma_gio_hang, ma_san_pham),
+    constraint fk_cartitem_cart
+        foreign key (ma_gio_hang) references gio_hang(ma_gio_hang)
+        on delete cascade,
+    constraint fk_cartitem_product
+        foreign key (ma_san_pham) references san_pham(ma_san_pham)
+        on delete restrict
+);
+
+-- Dữ liệu mẫu
+-- Thêm dữ liệu cho bảng vi_tri
+insert into vi_tri (ma_vi_tri, ten_vi_tri) values
+(1, 'admin'),
+(2, 'user'),
+(3, 'guest');
+
+-- Thêm dữ liệu cho bảng nguoi_dung
+insert into nguoi_dung (ten_dang_nhap, mat_khau, email, ho_ten, so_dien_thoai, dia_chi, vai_tro, ma_vi_tri) values
+('admin01', '123456', 'admin@example.com', 'Nguyễn Văn A', '0901234567', '123 Đường A, Hà Nội', 'admin', 1),
+('staff01', '123456', 'staff@example.com', 'Trần Thị B', '0912345678', '456 Đường B, TP. HCM', 'staff', 2),
+('user01', '123456', 'user01@example.com', 'Lê Văn C', '0923456789', '789 Đường C, Đà Nẵng', 'customer', 3),
+('user02', '123456', 'user02@example.com', 'Phạm Thị D', '0934567890', '12 Nguyễn Huệ, Hà Nội', 'customer', 1);
+
+-- Thêm dữ liệu cho bảng danh_muc
+insert into danh_muc (ten_danh_muc) values
+('Điện thoại'),
+('Laptop'),
+('Phụ kiện'),
+('Đồng hồ');
+
+-- Thêm dữ liệu cho bảng san_pham
+insert into san_pham (ten_san_pham, gia, so_luong, mo_ta, hinh_anh, ma_danh_muc) values
+('iPhone 15 Pro', 29990000, 50, 'Điện thoại Apple cao cấp', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIcFbX-CC1ugTZaxsSyZdHY8LkIHiQXJp_2g&s', 1),
+('Samsung Galaxy S23', 24990000, 40, 'Flagship Samsung mới nhất', 'https://cdn2.cellphones.com.vn/insecure/rs:fill:0:358/q:90/plain/https://cellphones.com.vn/media/catalog/product/s/2/s23-ultra-xanh.png', 1),
+('MacBook Pro M2', 45990000, 30, 'Laptop hiệu năng cao của Apple', 'data:image/jpeg;base64,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', 2),
+('Dell XPS 13', 32990000, 25, 'Laptop siêu mỏng nhẹ', 'data:image/jpeg;base64,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', 2),
+('Tai nghe AirPods Pro', 5490000, 100, 'Tai nghe không dây Apple', 'https://bizweb.dktcdn.net/thumb/1024x1024/100/356/047/products/airpods-pro-2-jpeg.jpg?v=1685453688050', 3),
+('Đồng hồ Apple Watch', 11990000, 60, 'Smartwatch Apple cao cấp', 'https://phukienxinxo.com/wp-content/uploads/2024/06/Dong-ho-thong-minh-Apple-Watch-Series-9-REP-1-1-45Mm-phien-ban-vo-thep-man-hinh-tran-vien-2.webp', 4);
+
+-- Thêm dữ liệu cho bảng khuyen_mai
+insert into khuyen_mai (ten_khuyen_mai, mo_ta, giam_phan_tram, ngay_bat_dau, ngay_ket_thuc) values
+('Giảm giá mùa hè', 'Khuyến mãi giảm giá 20%', 20, '2025-08-01', '2025-08-31'),
+('Black Friday', 'Giảm giá sốc 50%', 50, '2025-11-25', '2025-11-30');
+
+-- Thêm dữ liệu cho bảng don_hang
+insert into don_hang (ma_nguoi_dung, trang_thai, tong_tien, ma_khuyen_mai) values
+(3, 'cho_xu_ly', 29990000, 1), -- user01 mua iPhone 15
+(4, 'dang_xu_ly', 51480000, null); -- user02 mua MacBook + AirPods
+
+-- Thêm dữ liệu cho bảng chi_tiet_don_hang
+insert into chi_tiet_don_hang (ma_don_hang, ma_san_pham, so_luong, gia) values
+(1, 1, 1, 29990000),
+(2, 3, 1, 45990000),
+(2, 5, 1, 5490000);
+
+-- Thêm dữ liệu cho bảng thanh_toan
+insert into thanh_toan (ma_don_hang, phuong_thuc, so_tien, trang_thai) values
+(1, 'chuyen_khoan', 29990000, 'da_thanh_toan'),
+(2, 'vi_dien_tu', 51480000, 'chua_thanh_toan');
+
+-- Thêm dữ liệu cho bảng gio_hang
+insert into gio_hang (ma_nguoi_dung) values
+(3),
+(4);
+
+-- Thêm dữ liệu cho bảng chi_tiet_gio_hang
+insert into chi_tiet_gio_hang (ma_gio_hang, ma_san_pham, so_luong, gia) values
+(1, 2, 1, 24990000), -- user01 cho Galaxy S23 vào giỏ
+(2, 6, 2, 11990000); -- user02 cho 2 Apple Watch vào giỏ
