@@ -1,5 +1,4 @@
 package com.example.storeproject.repository.product;
-
 import com.example.storeproject.dto.ProductDto;
 import com.example.storeproject.entity.Product;
 import com.example.storeproject.repository.DBConnection;

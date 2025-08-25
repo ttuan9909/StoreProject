@@ -2,13 +2,13 @@ package com.example.storeproject.service.product;
 
 import com.example.storeproject.dto.ProductDto;
 import com.example.storeproject.entity.Product;
-
 import com.example.storeproject.repository.product.IProductRepository;
 import com.example.storeproject.repository.product.ProductRepository;
 
 import java.util.List;
 
 public class ProductService implements IProductService {
+
 
     private final IProductRepository repository = new ProductRepository();
 
@@ -41,4 +41,5 @@ public class ProductService implements IProductService {
 
     @Override
     public boolean delete(int id) { return repository.deleteById(id); }
+
 }

@@ -2,7 +2,6 @@ package com.example.storeproject.repository.category;
 
 import com.example.storeproject.entity.Category;
 import com.example.storeproject.repository.DBConnection;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,9 +44,7 @@ public class CategoryRepository implements ICategoryRepository {
             }
         } catch (Exception e) {
             System.out.println("Lỗi query Category.findById");
-            e.printStackTrace();
-        }
-        return null;
+
     }
 
     @Override
@@ -108,5 +105,6 @@ public class CategoryRepository implements ICategoryRepository {
             e.printStackTrace();
         }
         return results.isEmpty() ? Collections.emptyList() : results;
+
     }
 }

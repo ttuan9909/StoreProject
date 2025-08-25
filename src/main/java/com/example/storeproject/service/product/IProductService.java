@@ -1,5 +1,4 @@
 package com.example.storeproject.service.product;
-
 import com.example.storeproject.dto.ProductDto;
 
 import java.util.List;
@@ -19,3 +18,4 @@ public interface IProductService {
 
     List<ProductDto> search(String keyword);
 }
+

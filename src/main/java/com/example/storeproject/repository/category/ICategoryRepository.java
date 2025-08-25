@@ -2,6 +2,7 @@ package com.example.storeproject.repository.category;
 
 import com.example.storeproject.entity.Category;
 
+
 import java.util.List;
 
 public interface ICategoryRepository {
@@ -11,4 +12,5 @@ public interface ICategoryRepository {
     void update(Category c);
     boolean deleteById(int id);
     List<Category> searchByName(String keyword);
+
 }

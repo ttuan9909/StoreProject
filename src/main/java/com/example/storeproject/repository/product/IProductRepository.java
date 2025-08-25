@@ -14,4 +14,5 @@ public interface IProductRepository {
 
     boolean deleteById(int id);      // DELETE theo productId (bắt lỗi FK)
     List<ProductDto> searchByName(String keyword);
+
 }
