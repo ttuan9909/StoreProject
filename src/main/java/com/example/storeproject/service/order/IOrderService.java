@@ -2,17 +2,14 @@ package com.example.storeproject.service.order;
 
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
-
 import java.util.List;
 
 public interface IOrderService {
-    List<Order> getAll();
+    Order createOrderFromCart(int userId, double totalPrice, Integer discountId);
+    List<Order> getOrdersByUserId(int userId);
+    Order getOrderById(int orderId);
+    List<OrderDetail> getOrderDetails(int orderId);
+    boolean updateOrderStatus(int orderId, String status);
 
-    List<Order> search(String keyword);
 
-    List<OrderDetail> getDetails(int orderId);
-
-    boolean approve(int orderId);
-
-    boolean removeProduct(int orderId, int productId);
 }

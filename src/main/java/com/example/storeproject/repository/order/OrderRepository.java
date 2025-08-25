@@ -1,125 +1,178 @@
 package com.example.storeproject.repository.order;
 
-import com.example.storeproject.database.DatabaseConnection;
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
+import com.example.storeproject.repository.DBConnection;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OrderRepository implements IOrderRepository {
 
+    
     @Override
-    public List<Order> findAll() {
-        List<Order> list = new ArrayList<>();
-        String sql =
-                "select dh.ma_don_hang, dh.ma_nguoi_dung, dh.ngay_dat, dh.trang_thai, dh.tong_tien " +
-                        "from don_hang dh " +
-                        "join nguoi_dung nd on dh.ma_nguoi_dung = nd.ma_nguoi_dung";
-        try (Connection connection = DatabaseConnection.getConnectDB();
-             PreparedStatement pre = connection.prepareStatement(sql);
-             ResultSet rs = pre.executeQuery()) {
-
-            while (rs.next()) {
-                Order o = new Order();
-                o.setOrderId(rs.getInt(1));
-                o.setUserId(rs.getInt(2)); // entity dùng Integer, autobox OK
-                o.setOrderDate(rs.getTimestamp(3).toLocalDateTime());
-                o.setOrderStatus(rs.getString(4));
-                o.setTotalPrice(rs.getDouble(5));
-                list.add(o);
+    public Order createOrder(Order order) {
+        String sql = "INSERT INTO don_hang (ma_nguoi_dung, trang_thai, tong_tien, ma_khuyen_mai) VALUES (?, ?, ?, ?)";
+        
+        try (Connection conn = DBConnection.getConnectDB();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            ps.setInt(1, order.getUserId());
+            ps.setString(2, order.getOrderStatus());
+            ps.setDouble(3, order.getTotalPrice());
+            
+            if (order.getDiscountId() != null) {
+                ps.setInt(4, order.getDiscountId());
+            } else {
+                ps.setNull(4, Types.INTEGER);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    @Override
-    public List<Order> search(String keyword) {
-        List<Order> list = new ArrayList<>();
-        String sql = "select dh.ma_don_hang, dh.ma_nguoi_dung, dh.ngay_dat, dh.trang_thai, dh.tong_tien" +
-        " from don_hang dh" + "join nguoi_dung nd on dh.ma_nguoi_dung = nd.ma_nguoi_dung" + "where cast(dh.ma_don_hang as char) like ? or nd.ho_ten like ?";
-        try (Connection connection = DatabaseConnection.getConnectDB();
-             PreparedStatement pre = connection.prepareStatement(sql)) {
-
-            pre.setString(1, "%" + keyword + "%");
-            pre.setString(2, "%" + keyword + "%");
-
-            try (ResultSet rs = pre.executeQuery()) {
-                while (rs.next()) {
-                    Order o = new Order();
-                    o.setOrderId(rs.getInt(1));
-                    o.setUserId(rs.getInt(2));
-                    o.setOrderDate(rs.getTimestamp(3).toLocalDateTime());
-                    o.setOrderStatus(rs.getString(4));
-                    o.setTotalPrice(rs.getDouble(5));
-                    list.add(o);
+            
+            int affectedRows = ps.executeUpdate();
+            
+            if (affectedRows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int orderId = rs.getInt(1);
+                        order.setOrderId(orderId);
+                        return order;
+                    }
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return list;
+        return null;
     }
-
+    
     @Override
-    public List<OrderDetail> getOrderDetail(int orderId) {
-        List<OrderDetail> list = new ArrayList<>();
-        String sql = " select ct.ma_san_pham, sp.ten_san_pham, ct.so_luong, ct.gia"+
-                " from chi_tiet_don_hang ct"+
-                "join san_pham sp on ct.ma_san_pham = sp.ma_san_pham"+
-                "where ct.ma_don_hang = ?";
-        try (Connection connection = DatabaseConnection.getConnectDB();
-             PreparedStatement pre = connection.prepareStatement(sql)) {
-
-            pre.setInt(1, orderId);
-            try (ResultSet rs = pre.executeQuery()) {
+    public boolean createOrderDetail(OrderDetail orderDetail) {
+        String sql = "INSERT INTO chi_tiet_don_hang (ma_don_hang, ma_san_pham, so_luong, gia) VALUES (?, ?, ?, ?)";
+        
+        try (Connection conn = DBConnection.getConnectDB();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, orderDetail.getOrderId());
+            ps.setInt(2, orderDetail.getProductId());
+            ps.setInt(3, orderDetail.getQuantity());
+            ps.setDouble(4, orderDetail.getPrice());
+            
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    @Override
+    public List<Order> getOrdersByUserId(int userId) {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT * FROM don_hang WHERE ma_nguoi_dung = ? ORDER BY ngay_dat DESC";
+        
+        try (Connection conn = DBConnection.getConnectDB();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, userId);
+            
+            try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    OrderDetail od = new OrderDetail();
-                    od.setOrderId(orderId);
-                    od.setProductId(rs.getInt(1));
-                    od.setQuantity(rs.getInt(3));
-                    od.setPrice(rs.getDouble(4));
-                    list.add(od);
+                    Order order = mapResultSetToOrder(rs);
+                    orders.add(order);
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return list;
+        return orders;
     }
-
+    
     @Override
-    public boolean updateStatus(int orderId, String status) {
-        String sql = "update don_hang set trang_thai = ? where ma_don_hang = ?";
-        try (Connection connection = DatabaseConnection.getConnectDB();
-             PreparedStatement pre = connection.prepareStatement(sql)) {
-
-            pre.setString(1, status);
-            pre.setInt(2, orderId);
-            return pre.executeUpdate() > 0;
-        } catch (Exception e) {
+    public Order getOrderById(int orderId) {
+        String sql = "SELECT * FROM don_hang WHERE ma_don_hang = ?";
+        
+        try (Connection conn = DBConnection.getConnectDB();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, orderId);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToOrder(rs);
+                }
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return null;
     }
-
+    
     @Override
-    public boolean deleteProductFromOrder(int orderId, int productId) {
-        String sql = "delete from chi_tiet_don_hang where ma_don_hang = ? and ma_san_pham = ?";
-        try (Connection connection = DatabaseConnection.getConnectDB();
-             PreparedStatement pre = connection.prepareStatement(sql)) {
-
-            pre.setInt(1, orderId);
-            pre.setInt(2, productId);
-            return pre.executeUpdate() > 0;
-        } catch (Exception e) {
+    public List<OrderDetail> getOrderDetails(int orderId) {
+        List<OrderDetail> orderDetails = new ArrayList<>();
+        String sql = "SELECT * FROM chi_tiet_don_hang WHERE ma_don_hang = ?";
+        
+        try (Connection conn = DBConnection.getConnectDB();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, orderId);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderDetail orderDetail = mapResultSetToOrderDetail(rs);
+                    orderDetails.add(orderDetail);
+                }
+            }
+        } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return orderDetails;
+    }
+    
+    @Override
+    public boolean updateOrderStatus(int orderId, String status) {
+        String sql = "UPDATE don_hang SET trang_thai = ? WHERE ma_don_hang = ?";
+        
+        try (Connection conn = DBConnection.getConnectDB();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, status);
+            ps.setInt(2, orderId);
+            
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
+        Order order = new Order();
+        order.setOrderId(rs.getInt("ma_don_hang"));
+        order.setUserId(rs.getInt("ma_nguoi_dung"));
+        order.setOrderStatus(rs.getString("trang_thai"));
+        order.setTotalPrice(rs.getDouble("tong_tien"));
+        
+        int discountId = rs.getInt("ma_khuyen_mai");
+        if (!rs.wasNull()) {
+            order.setDiscountId(discountId);
+        }
+        
+        Timestamp orderDate = rs.getTimestamp("ngay_dat");
+        if (orderDate != null) {
+            order.setOrderDate(orderDate.toLocalDateTime());
+        }
+        
+        return order;
+    }
+    
+    private OrderDetail mapResultSetToOrderDetail(ResultSet rs) throws SQLException {
+        OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setOrderId(rs.getInt("ma_don_hang"));
+        orderDetail.setProductId(rs.getInt("ma_san_pham"));
+        orderDetail.setQuantity(rs.getInt("so_luong"));
+        orderDetail.setPrice(rs.getDouble("gia"));
+        return orderDetail;
     }
 }
+
