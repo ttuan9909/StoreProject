@@ -1,10 +1,12 @@
 package com.example.storeproject.service.order;
 
+
 import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
 import com.example.storeproject.repository.order.IOrderRepository;
 import com.example.storeproject.repository.order.OrderRepository;
+
 import com.example.storeproject.service.cart.ICartService;
 import com.example.storeproject.service.cart.CartService;
 
@@ -72,5 +74,6 @@ public class OrderService implements IOrderService {
     @Override
     public boolean updateOrderStatus(int orderId, String status) {
         return orderRepository.updateOrderStatus(orderId, status);
+
     }
 }
