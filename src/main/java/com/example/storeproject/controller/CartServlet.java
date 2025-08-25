@@ -184,19 +184,21 @@ public class CartServlet extends HttpServlet {
         
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
-            
+            System.out.println("CartServlet removeFromCart: productId=" + productId + ", userId=" + userId);  // Debug
+
             boolean success = cartService.removeProductFromCart(userId, productId);
-            
+
             if (success) {
-                response.setContentType("application/json");
                 response.getWriter().write("{\"success\": true, \"message\": \"Đã xóa sản phẩm khỏi giỏ hàng\"}");
             } else {
-                response.setContentType("application/json");
                 response.getWriter().write("{\"success\": false, \"message\": \"Không thể xóa sản phẩm khỏi giỏ hàng\"}");
             }
         } catch (NumberFormatException e) {
-            response.setContentType("application/json");
+            System.out.println("CartServlet removeFromCart: NumberFormatException: " + e.getMessage());  // Debug
             response.getWriter().write("{\"success\": false, \"message\": \"Dữ liệu không hợp lệ\"}");
+        } catch (Exception e) {
+            System.out.println("CartServlet removeFromCart: Unexpected error: " + e.getMessage());  // Debug
+            response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra.\"}");
         }
     }
     

@@ -246,13 +246,35 @@
         }
 
         function removeFromCart(productId) {
-            // Implement AJAX call to remove item from cart
             console.log('Removing from cart:', productId);
-            
-            // You can implement the actual AJAX call here
-            // For now, just show a message and reload the page
-            alert('Đã xóa sản phẩm khỏi giỏ hàng!');
-            location.reload();
+
+            const formData = new URLSearchParams();
+            formData.append('action', 'remove');
+            formData.append('productId', productId);
+
+            fetch('${pageContext.request.contextPath}/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();  // Reload để cập nhật giỏ hàng
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi kết nối: ' + error.message);
+                });
         }
 
         function clearCart() {
@@ -266,12 +288,38 @@
         }
 
         function createOrder() {
-            // Implement AJAX call to create order
             console.log('Creating order');
-            
-            // You can implement the actual AJAX call here
-            // For now, just redirect to order page
-            window.location.href = '${pageContext.request.contextPath}/order';
+
+            const formData = new URLSearchParams();
+            formData.append('totalPrice', calculateTotal());  // Function tính total từ UI
+            // formData.append('discountId', discountId);  // Nếu có
+
+            fetch('${pageContext.request.contextPath}/order/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.href = '${pageContext.request.contextPath}/order';  // Redirect sau khi tạo thành công
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Lỗi kết nối: ' + error.message);
+                });
+        }
+        // Example function tính total từ UI (tùy chỉnh theo cart items)
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.item-total').forEach(item => {
+                total += parseFloat(item.textContent.replace(/[^\d.]/g, ''));
+            });
+            return total;
         }
     </script>
 </body>

@@ -16,7 +16,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "OrderServlet", urlPatterns = {"/order", "/order/*"})
+@WebServlet(name = "OrderServlet", urlPatterns = {"/order", "/order/create", "/order/*"})
 public class OrderServlet extends HttpServlet {
     private static final IOrderService orderService = new OrderService();
     private static final ICartService cartService = new CartService();
