@@ -115,7 +115,7 @@
                                     <span class="badge bg-success">Còn ${product.quantity}</span>
                                 </div>
                                 <div class="d-grid gap-2">
-                                    <a href="${pageContext.request.contextPath}/product/detail/${product.productId}" 
+                                    <a href="/product/detail/${product.productId}"
                                        class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-eye"></i> Xem chi tiết
                                     </a>

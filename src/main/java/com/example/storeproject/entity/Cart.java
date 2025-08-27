@@ -1,12 +1,14 @@
 package com.example.storeproject.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Cart {
     private int cartId;
     private int userId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<CartDetail> cartDetails;
 
     public Cart() {
     }
@@ -48,5 +50,20 @@ public class Cart {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<CartDetail> getCartDetails() {
+        return cartDetails;
+    }
+
+    public void setCartDetails(List<CartDetail> cartDetails) {
+        this.cartDetails = cartDetails;
+    }
+
+    public double getTotalPrice() {
+        if (cartDetails == null) return 0;
+        return cartDetails.stream()
+                .mapToDouble(cd -> cd.getPrice() * cd.getQuantity())
+                .sum();
     }
 }

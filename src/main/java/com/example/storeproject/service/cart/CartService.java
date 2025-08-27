@@ -5,6 +5,7 @@ import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.repository.cart.ICartRepository;
 import com.example.storeproject.repository.cart.CartRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CartService implements ICartService {
@@ -56,15 +57,19 @@ public class CartService implements ICartService {
         if (cart != null) {
             return cartRepository.getCartItems(cart.getCartId());
         }
-        return List.of();
+        return new ArrayList<>();
     }
     
     @Override
     public boolean clearCart(int userId) {
         Cart cart = cartRepository.getCartByUserId(userId);
+        System.out.println("CartService: clearCart - userId=" + userId + ", cart=" + (cart != null ? cart.getCartId() : "null"));
         if (cart != null) {
-            return cartRepository.clearCart(cart.getCartId());
+            boolean result = cartRepository.clearCart(cart.getCartId());
+            System.out.println("CartService: clearCart - result=" + result);
+            return result;
         }
+        System.out.println("CartService: clearCart - no cart found for userId=" + userId);
         return false;
     }
     
@@ -75,5 +80,19 @@ public class CartService implements ICartService {
             return cartRepository.getCartTotal(cart.getCartId());
         }
         return 0.0;
+    }
+
+    @Override
+    public Cart getCartByUserId(int userId) {
+        return cartRepository.getCartByUserId(userId);
+    }
+
+    @Override
+    public List<CartDetail> getCartDetails(int userId) {
+        Cart cart = cartRepository.getCartByUserId(userId);
+        if (cart != null) {
+            return cartRepository.getCartItems(cart.getCartId());
+        }
+        return new ArrayList<>();
     }
 }

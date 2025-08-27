@@ -154,17 +154,17 @@ public class CartRepository implements ICartRepository {
     @Override
     public boolean clearCart(int cartId) {
         String sql = "DELETE FROM chi_tiet_gio_hang WHERE ma_gio_hang = ?";
-        
         try (Connection conn = DBConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
             ps.setInt(1, cartId);
-            
-            return ps.executeUpdate() > 0;
+            int affectedRows = ps.executeUpdate();
+            System.out.println("CartRepository: clearCart - cartId=" + cartId + ", affectedRows=" + affectedRows);
+            return affectedRows > 0;
         } catch (SQLException e) {
+            System.out.println("CartRepository: SQLException in clearCart - " + e.getMessage() + ", SQLState: " + e.getSQLState() + ", ErrorCode: " + e.getErrorCode());
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
     
     @Override

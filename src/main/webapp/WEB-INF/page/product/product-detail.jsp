@@ -102,8 +102,13 @@
                     <div class="mb-4">
                         <h5>Thông tin khác:</h5>
                         <ul class="list-unstyled">
-                            <li><i class="fas fa-calendar"></i> Ngày tạo: 
-                                <fmt:formatDate value="${product.dateCreated}" pattern="dd/MM/yyyy"/>
+                            <li><i class="fas fa-calendar"></i> Ngày tạo:
+                                <c:if test="${dateCreatedAsDate != null}">
+                                    <fmt:formatDate value="${dateCreatedAsDate}" pattern="dd/MM/yyyy"/>
+                                </c:if>
+                                <c:if test="${dateCreatedAsDate == null}">
+                                    Không có ngày
+                                </c:if>
                             </li>
                             <li><i class="fas fa-tag"></i> Mã sản phẩm: #${product.productId}</li>
                         </ul>
@@ -174,26 +179,51 @@
         // Add to cart form submission
         document.getElementById('addToCartForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Check if user is logged in (you can implement this check)
-            const isLoggedIn = false; // This should be set based on your authentication logic
-            
+
+            const isLoggedIn = ${sessionScope.currentUser != null};
             if (!isLoggedIn) {
-                // Show login modal
                 const modal = new bootstrap.Modal(document.getElementById('addToCartModal'));
+                const loginLink = document.querySelector('#addToCartModal a.btn-primary');
+                loginLink.href = '${pageContext.request.contextPath}/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
                 modal.show();
             } else {
-                // Add to cart logic
                 const quantity = document.getElementById('quantity').value;
-                const productId = ${product.productId};
-                const productName = '${product.productName}';
-                const productPrice = ${product.price};
-                
-                // You can implement AJAX call to add to cart here
-                console.log('Adding to cart:', {productId, productName, productPrice, quantity});
-                
-                // Show success message
-                alert('Đã thêm sản phẩm vào giỏ hàng!');
+                const productId = ${product != null ? product.productId : 0};
+
+                if (productId === 0) {
+                    alert('Sản phẩm không hợp lệ!');
+                    return;
+                }
+
+                const formData = new URLSearchParams();
+                formData.append('action', 'add');
+                formData.append('productId', productId);
+                formData.append('quantity', quantity);
+
+                fetch('${pageContext.request.contextPath}/cart/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}...`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                        } else {
+                            alert('Lỗi: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Lỗi kết nối: ' + error.message);
+                    });
             }
         });
 

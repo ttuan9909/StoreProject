@@ -151,31 +151,58 @@ public class CartServlet extends HttpServlet {
             response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra khi thêm sản phẩm.\"}");
         }
     }
-    
-    private void updateCartItem(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    private void updateCartItem(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
             int quantity = Integer.parseInt(request.getParameter("quantity"));
-            
-            if (quantity > 0) {
-                boolean success = cartService.updateProductQuantity(userId, productId, quantity);
-                
-                if (success) {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": true, \"message\": \"Cập nhật giỏ hàng thành công\"}");
-                } else {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": false, \"message\": \"Không thể cập nhật giỏ hàng\"}");
-                }
-            } else {
-                response.setContentType("application/json");
+            System.out.println("CartServlet: updateCartItem - userId=" + userId + ", productId=" + productId + ", quantity=" + quantity);
+
+            if (quantity <= 0) {
                 response.getWriter().write("{\"success\": false, \"message\": \"Số lượng phải lớn hơn 0\"}");
+                return;
+            }
+
+            // Kiểm tra số lượng tồn kho
+            Product product = productService.getProductById(productId);
+            if (product == null) {
+                System.out.println("CartServlet: Product not found for ID: " + productId);
+                response.getWriter().write("{\"success\": false, \"message\": \"Sản phẩm không tồn tại.\"}");
+                return;
+            }
+            if (quantity > product.getQuantity()) {
+                System.out.println("CartServlet: Quantity exceeds stock: requested=" + quantity + ", available=" + product.getQuantity());
+                response.getWriter().write("{\"success\": false, \"message\": \"Số lượng không đủ.\"}");
+                return;
+            }
+
+            boolean success = cartService.updateProductQuantity(userId, productId, quantity);
+            if (success) {
+                // Lấy giá đơn vị và tổng giá trị giỏ hàng
+                List<CartDetail> cartItems = cartService.getCartItems(userId);
+                double price = cartItems.stream()
+                        .filter(item -> item.getProductId() == productId)
+                        .findFirst()
+                        .map(CartDetail::getPrice)
+                        .orElse(0.0);
+                double cartTotal = cartService.getCartTotal(userId);
+
+                response.getWriter().write(
+                        "{\"success\": true, \"message\": \"Cập nhật giỏ hàng thành công\", \"price\": " + price + ", \"cartTotal\": " + cartTotal + "}"
+                );
+            } else {
+                response.getWriter().write("{\"success\": false, \"message\": \"Không thể cập nhật giỏ hàng\"}");
             }
         } catch (NumberFormatException e) {
-            response.setContentType("application/json");
+            System.out.println("CartServlet: NumberFormatException in updateCartItem - " + e.getMessage());
             response.getWriter().write("{\"success\": false, \"message\": \"Dữ liệu không hợp lệ\"}");
+        } catch (Exception e) {
+            System.out.println("CartServlet: Exception in updateCartItem - " + e.getMessage());
+            e.printStackTrace();
+            response.getWriter().write("{\"success\": false, \"message\": \"Lỗi server: " + e.getMessage() + "\"}");
         }
     }
     

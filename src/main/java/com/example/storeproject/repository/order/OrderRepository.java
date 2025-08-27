@@ -1,5 +1,6 @@
 package com.example.storeproject.repository.order;
 
+import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
 import com.example.storeproject.repository.DBConnection;
@@ -160,7 +161,7 @@ public class OrderRepository implements IOrderRepository {
         
         Timestamp orderDate = rs.getTimestamp("ngay_dat");
         if (orderDate != null) {
-            order.setOrderDate(orderDate.toLocalDateTime());
+            order.setOrderDate(orderDate);
         }
         
         return order;
@@ -174,5 +175,82 @@ public class OrderRepository implements IOrderRepository {
         orderDetail.setPrice(rs.getDouble("gia"));
         return orderDetail;
     }
+
+    public Order createOrderFromCart(Order order, List<CartDetail> cartDetails) {
+        String orderSql = "INSERT INTO don_hang (ma_nguoi_dung, trang_thai, tong_tien, ma_khuyen_mai) VALUES (?, ?, ?, ?)";
+        String detailSql = "INSERT INTO chi_tiet_don_hang (ma_don_hang, ma_san_pham, so_luong, gia) VALUES (?, ?, ?, ?)";
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnectDB();
+            conn.setAutoCommit(false);
+            System.out.println("OrderRepository: Creating order for userId = " + order.getUserId() + ", totalPrice = " + order.getTotalPrice());
+            try (PreparedStatement ps = conn.prepareStatement(orderSql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setInt(1, order.getUserId());
+                ps.setString(2, order.getOrderStatus());
+                ps.setDouble(3, order.getTotalPrice());
+                if (order.getDiscountId() != null) {
+                    ps.setInt(4, order.getDiscountId());
+                } else {
+                    ps.setNull(4, Types.INTEGER);
+                }
+                int affected = ps.executeUpdate();
+                System.out.println("OrderRepository: Insert don_hang affected = " + affected);
+                if (affected == 0) {
+                    System.out.println("OrderRepository: Insert don_hang failed");
+                    conn.rollback();
+                    return null;
+                }
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        order.setOrderId(rs.getInt(1));
+                        System.out.println("OrderRepository: Generated orderId = " + order.getOrderId());
+                    }
+                }
+            }
+            try (PreparedStatement psDetail = conn.prepareStatement(detailSql)) {
+                for (CartDetail cd : cartDetails) {
+                    psDetail.setInt(1, order.getOrderId());
+                    psDetail.setInt(2, cd.getProductId());
+                    psDetail.setInt(3, cd.getQuantity());
+                    psDetail.setDouble(4, cd.getPrice());
+                    System.out.println("OrderRepository: Adding order detail for productId = " + cd.getProductId());
+                    psDetail.addBatch();
+                }
+                int[] results = psDetail.executeBatch();
+                System.out.println("OrderRepository: Insert chi_tiet_don_hang results = " + java.util.Arrays.toString(results));
+                for (int result : results) {
+                    if (result == Statement.EXECUTE_FAILED) {
+                        System.out.println("OrderRepository: Failed to insert some order details");
+                        conn.rollback();
+                        return null;
+                    }
+                }
+            }
+            conn.commit();
+            System.out.println("OrderRepository: Order created successfully, orderId = " + order.getOrderId());
+            return order;
+        } catch (SQLException e) {
+            System.out.println("OrderRepository: SQLException - " + e.getMessage() + ", SQLState: " + e.getSQLState() + ", ErrorCode: " + e.getErrorCode());
+            e.printStackTrace();
+            try {
+                if (conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return null;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
 }
 
