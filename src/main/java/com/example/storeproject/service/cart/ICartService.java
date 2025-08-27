@@ -12,4 +12,6 @@ public interface ICartService {
     List<CartDetail> getCartItems(int userId);
     boolean clearCart(int userId);
     double getCartTotal(int userId);
+    Cart getCartByUserId(int userId);
+    List<CartDetail> getCartDetails(int userId);
 }

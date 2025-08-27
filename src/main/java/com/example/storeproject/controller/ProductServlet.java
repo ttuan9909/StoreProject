@@ -69,22 +69,45 @@ public class ProductServlet extends HttpServlet {
     
     private void handleProductDetail(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        
+
         String pathInfo = request.getPathInfo();
-        String productIdStr = pathInfo.substring("/detail/".length());
-        
+        System.out.println("[ProductServlet] Đang xử lý product detail, pathInfo = " + pathInfo);
+
+        if (pathInfo == null || !pathInfo.startsWith("/detail/")) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Đường dẫn không hợp lệ");
+            return;
+        }
+
         try {
+            String productIdStr = pathInfo.substring("/detail/".length());
             int productId = Integer.parseInt(productIdStr);
+            System.out.println("[ProductServlet] Lấy chi tiết productId = " + productId);
+
             Product product = productService.getProductById(productId);
-            
-            if (product != null) {
-                request.setAttribute("product", product);
-                request.getRequestDispatcher("/WEB-INF/page/product/product-detail.jsp").forward(request, response);
-            } else {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            if (product == null) {
+                System.out.println("[ProductServlet] Không tìm thấy sản phẩm id=" + productId);
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy sản phẩm");
+                return;
             }
+
+            request.setAttribute("product", product);
+
+            // Chuyển đổi LocalDate sang Date nếu cần
+            if (product != null && product.getDateCreated() != null) {
+                java.util.Date dateCreated = java.util.Date.from(
+                        product.getDateCreated().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+                );
+                request.setAttribute("dateCreatedAsDate", dateCreated);
+            }
+
+            String jspPath = "/WEB-INF/page/product/product-detail.jsp";
+            System.out.println("[ProductServlet] Forward tới JSP: " + jspPath);
+
+            request.getRequestDispatcher(jspPath).forward(request, response);
+
         } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            System.out.println("[ProductServlet] Lỗi parseInt productId từ pathInfo: " + pathInfo);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Mã sản phẩm không hợp lệ");
         }
     }
     

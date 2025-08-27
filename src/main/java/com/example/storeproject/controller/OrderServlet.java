@@ -1,5 +1,7 @@
 package com.example.storeproject.controller;
 
+import com.example.storeproject.entity.Cart;
+import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
 import com.example.storeproject.service.order.IOrderService;
@@ -16,7 +18,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "OrderServlet", urlPatterns = {"/order", "/order/*"})
+@WebServlet(name = "OrderServlet", urlPatterns = {"/order", "/order/create", "/order/*"})
 public class OrderServlet extends HttpServlet {
     private static final IOrderService orderService = new OrderService();
     private static final ICartService cartService = new CartService();
@@ -117,32 +119,45 @@ public class OrderServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
-    
-    private void createOrder(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    private void createOrder(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         try {
-            // Lấy tổng tiền giỏ hàng
-            double cartTotal = cartService.getCartTotal(userId);
-            
-            if (cartTotal > 0) {
-                // Tạo đơn hàng từ giỏ hàng
-                Order order = orderService.createOrderFromCart(userId, cartTotal, null);
-                
+            Cart cart = cartService.getCartByUserId(userId);
+            List<CartDetail> cartDetails = cartService.getCartDetails(userId);
+            System.out.println("OrderServlet: cart = " + (cart != null ? cart.getCartId() : "null"));
+            System.out.println("OrderServlet: cartDetails = " + (cartDetails != null ? cartDetails.size() : "null"));
+            if (cart != null && cartDetails != null && !cartDetails.isEmpty()) {
+                Order order = orderService.createOrderFromCart(userId, cart, cartDetails);
                 if (order != null) {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": true, \"message\": \"Đặt hàng thành công\", \"orderId\": " + order.getOrderId() + "}");
+                    boolean cleared = cartService.clearCart(userId);
+                    if (!cleared) {
+                        System.out.println("OrderServlet: Failed to clear cart for userId=" + userId);
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        response.getWriter().write(
+                                "{\"success\": true, \"message\": \"Đặt hàng thành công nhưng không thể xóa giỏ hàng\", \"orderId\": " + order.getOrderId() + "}"
+                        );
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        response.getWriter().write(
+                                "{\"success\": true, \"message\": \"Đặt hàng thành công\", \"orderId\": " + order.getOrderId() + "}"
+                        );
+                    }
                 } else {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": false, \"message\": \"Không thể tạo đơn hàng\"}");
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"success\": false, \"message\": \"Không thể tạo đơn hàng: Lỗi dữ liệu hoặc cơ sở dữ liệu.\"}");
                 }
             } else {
-                response.setContentType("application/json");
-                response.getWriter().write("{\"success\": false, \"message\": \"Giỏ hàng trống\"}");
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("{\"success\": false, \"message\": \"Giỏ hàng trống.\"}");
             }
         } catch (Exception e) {
-            response.setContentType("application/json");
-            response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra khi đặt hàng\"}");
+            System.out.println("OrderServlet: Exception - " + e.getMessage());
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra khi đặt hàng: " + e.getMessage() + "\"}");
         }
     }
 }
