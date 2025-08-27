@@ -4,59 +4,60 @@
   Date: 8/22/2025
   Time: 12:14 PM
 --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<html>
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <title>Order List</title>
+  <meta charset="UTF-8">
+  <title>Chi tiết đơn hàng</title>
 </head>
 <body>
-<h2>All Orders</h2>
-
-<form action="${pageContext.request.contextPath}/admin/order" method="get">
-  <input type="text" name="keyword" placeholder="Search by order ID or customer name"/>
-  <input type="submit" value="Search"/>
-</form>
-
-<table border="1" cellpadding="10" cellspacing="0">
+<h2>Chi tiết đơn hàng</h2>
+<c:if test="${not empty order}">
+  <p>Mã đơn: ${order.orderId}</p>
+  <p>Mã người dùng: ${order.userId}</p>
+  <p>Trạng thái: ${order.orderStatus}</p>
+  <p>Tổng tiền: ${order.totalPrice}</p>
+  <form method="post" action="${pageContext.request.contextPath}/admin/order">
+    <input type="hidden" name="action" value="approve">
+    <input type="hidden" name="orderId" value="${order.orderId}">
+    <button type="submit">Duyệt đơn</button>
+  </form>
+</c:if>
+<h3>Sản phẩm trong đơn</h3>
+<table border="1" cellspacing="0" cellpadding="6">
   <thead>
   <tr>
-    <th>ID</th>
-    <th>Customer</th>
-    <th>Created At</th>
-    <th>Status</th>
-    <th>Total</th>
-    <th>Actions</th>
+    <th>Mã sản phẩm</th>
+    <th>Tên sản phẩm</th>
+    <th>Số lượng</th>
+    <th>Giá</th>
+    <th>Xoá khỏi đơn</th>
   </tr>
   </thead>
   <tbody>
-  <c:forEach items="${orders}" var="o">
+  <c:forEach var="d" items="${details}">
     <tr>
-      <td>${o.orderId}</td>
-      <td>${o.customerName}</td>
-      <td>${o.createdAt}</td>
+      <td>${d.productId}</td>
+      <td>${d.productName}</td>
+      <td>${d.quantity}</td>
+      <td>${d.price}</td>
       <td>
-        <c:choose>
-          <c:when test="${o.status == 0}">Chờ xử lý</c:when>
-          <c:when test="${o.status == 1}">Đã duyệt</c:when>
-          <c:otherwise>Khác</c:otherwise>
-        </c:choose>
-      </td>
-      <td>${o.total}</td>
-      <td>
-        <a href="${pageContext.request.contextPath}/admin/order?action=detail&orderId=${o.orderId}">View Detail</a>
-        <c:if test="${o.status == 0}">
-          <form action="${pageContext.request.contextPath}/admin/order" method="post" style="display:inline">
-            <input type="hidden" name="action" value="approve"/>
-            <input type="hidden" name="orderId" value="${o.orderId}"/>
-            <input type="submit" value="Approve"/>
-          </form>
-        </c:if>
+        <form method="post" action="${pageContext.request.contextPath}/admin/order" onsubmit="return confirm('Xoá sản phẩm này khỏi đơn?');">
+          <input type="hidden" name="action" value="deleteItem">
+          <input type="hidden" name="orderId" value="${order.orderId}">
+          <input type="hidden" name="productId" value="${d.productId}">
+          <button type="submit">Xoá</button>
+        </form>
       </td>
     </tr>
   </c:forEach>
+  <c:if test="${empty details}">
+    <tr><td colspan="5">Không có sản phẩm</td></tr>
+  </c:if>
   </tbody>
 </table>
-
+<p><a href="${pageContext.request.contextPath}/admin/order">Quay lại danh sách</a></p>
 </body>
 </html>
