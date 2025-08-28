@@ -1,6 +1,8 @@
 package com.example.storeproject.service.order;
 
 
+import com.example.storeproject.dto.OrderDTO;
+import com.example.storeproject.dto.OrderDetailDTO;
 import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
@@ -12,16 +14,17 @@ import com.example.storeproject.service.cart.CartService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class OrderService implements IOrderService {
     private final IOrderRepository orderRepository;
     private final ICartService cartService;
-    
+
     public OrderService() {
         this.orderRepository = new OrderRepository();
         this.cartService = new CartService();
     }
-    
+
     @Override
     public Order createOrderFromCart(int userId, double totalPrice, Integer discountId) {
         // Tạo đơn hàng mới
@@ -31,12 +34,12 @@ public class OrderService implements IOrderService {
         order.setTotalPrice(totalPrice);
         order.setDiscountId(discountId);
         order.setOrderDate(LocalDateTime.now());
-        
+
         Order createdOrder = orderRepository.createOrder(order);
         if (createdOrder != null) {
             // Lấy các sản phẩm từ giỏ hàng
             List<CartDetail> cartItems = cartService.getCartItems(userId);
-            
+
             // Tạo chi tiết đơn hàng
             for (CartDetail cartItem : cartItems) {
                 OrderDetail orderDetail = new OrderDetail();
@@ -44,36 +47,83 @@ public class OrderService implements IOrderService {
                 orderDetail.setProductId(cartItem.getProductId());
                 orderDetail.setQuantity(cartItem.getQuantity());
                 orderDetail.setPrice(cartItem.getPrice());
-                
+
                 orderRepository.createOrderDetail(orderDetail);
             }
-            
+
             // Xóa giỏ hàng sau khi tạo đơn hàng thành công
             cartService.clearCart(userId);
-            
+
             return createdOrder;
         }
         return null;
     }
-    
+
     @Override
     public List<Order> getOrdersByUserId(int userId) {
         return orderRepository.getOrdersByUserId(userId);
     }
-    
+
     @Override
     public Order getOrderById(int orderId) {
         return orderRepository.getOrderById(orderId);
     }
-    
+
     @Override
     public List<OrderDetail> getOrderDetails(int orderId) {
         return orderRepository.getOrderDetails(orderId);
     }
-    
+
     @Override
     public boolean updateOrderStatus(int orderId, String status) {
         return orderRepository.updateOrderStatus(orderId, status);
 
+    }
+
+    @Override
+    public List<OrderDTO> findOrders(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return orderRepository.findOrdersAll();
+        }
+        return orderRepository.findOrders(keyword.trim());
+    }
+
+    @Override
+    public List<OrderDTO> findOrdersAll() {
+        return orderRepository.findOrdersAll();
+    }
+
+    @Override
+    public List<OrderDetailDTO> findOrderDetailsWithProductName(int orderId) {
+        return orderRepository.findOrderDetailsWithProductName(orderId);
+    }
+
+    @Override
+    public boolean deleteOrderItem(int orderId, int productId) {
+        return orderRepository.deleteOrderItem(orderId, productId);
+    }
+
+    @Override
+    public List<OrderDTO> findOrdersByStatus(String keyword, String status) {
+        // Lấy danh sách theo keyword (có thể rỗng)
+        List<OrderDTO> base = findOrders(keyword);
+
+        // Nếu không truyền trạng thái thì trả luôn danh sách gốc
+        if (status == null || status.trim().isEmpty()) {
+            return base;
+        }
+
+        String s = status.trim().toLowerCase();
+
+        // Lọc theo trạng thái (so sánh không phân biệt hoa thường)
+        return base.stream()
+                .filter(o -> {
+                    String st = null;
+                    try {
+                        st = o.getStatus();
+                    } catch (Exception ignore) {}
+                    return st != null && st.toLowerCase().equals(s);
+                })
+                .collect(Collectors.toList());
     }
 }

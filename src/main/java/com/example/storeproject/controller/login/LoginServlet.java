@@ -9,14 +9,14 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 
-@WebServlet("/login")
+@WebServlet(urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
     private final ILoginService loginService = new LoginService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        req.getRequestDispatcher("/login/Login.jsp").forward(req, resp);
+        req.getRequestDispatcher("/login/Login.jsp").forward(req, resp); // giữ nguyên JSP bạn đang dùng
     }
 
     @Override
@@ -27,7 +27,7 @@ public class LoginServlet extends HttpServlet {
         String username = req.getParameter("username");
         String password = req.getParameter("password");
 
-        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
             req.setAttribute("message", "Vui lòng nhập đầy đủ username/password.");
             req.getRequestDispatcher("/login/Login.jsp").forward(req, resp);
             return;
@@ -35,55 +35,40 @@ public class LoginServlet extends HttpServlet {
 
         User user = loginService.login(username.trim(), password);
         if (user == null) {
-            req.setAttribute("message", "Login failed! Sai username/password.");
+            req.setAttribute("message", "Sai tài khoản hoặc mật khẩu.");
             req.getRequestDispatcher("/login/Login.jsp").forward(req, resp);
             return;
         }
 
-        HttpSession session = req.getSession();
-        session.setAttribute("currentUser", user);
-        session.setAttribute("userId", user.getUserId());
-        System.out.println("Stored userId in session: " + user.getUserId());
+        // Lưu session cho navbar + filter
+        HttpSession session = req.getSession(true);
+        String name =
+                user.getUserName()    != null ? user.getUserName() :
+                        user.getUserName()    != null ? user.getUserName() :
+                                user.getUserName() != null ? user.getUserName() : username;
 
-        // Lấy redirect từ session hoặc parameter (hỗ trợ từ modal trong JSP)
+        String role =
+                user.getRole()   != null ? user.getRole().toLowerCase() :
+                        user.getRole() != null ? user.getRole().toLowerCase() : "";
+
+        session.setAttribute("username", name);
+        session.setAttribute("role", role);
+        try { session.setAttribute("userId", user.getUserId()); } catch (Exception ignored) {}
+        session.setMaxInactiveInterval(30 * 60);
+
+        // Nếu trước đó bị chặn khi vào /admin/* → quay về đúng URL đó
         String redirect = (String) session.getAttribute("redirectAfterLogin");
-        if (redirect == null) {
-            // Nếu không có từ session, kiểm tra parameter (từ modal)
-            redirect = req.getParameter("redirect");
+        session.removeAttribute("redirectAfterLogin");
+        if (redirect != null && redirect.startsWith("/")) {
+            resp.sendRedirect(req.getContextPath() + redirect);
+            return;
         }
 
-        System.out.println("LoginServlet: Redirect URL: " + redirect);
-        session.removeAttribute("redirectAfterLogin");  // Xóa sau khi dùng
-
-        if (redirect != null && !redirect.trim().isEmpty()) {
-            // Redirect về URL gốc (an toàn: chỉ redirect nếu là URL nội bộ)
-            if (redirect.startsWith("/")) {
-                resp.sendRedirect(req.getContextPath() + redirect);
-            } else {
-                // Nếu không an toàn, redirect mặc định
-                handleDefaultRedirect(req, resp, user);
-            }
-        } else {
-            // Redirect mặc định
-            handleDefaultRedirect(req, resp, user);
-        }
-
-//        String role = user.getRole() == null ? "" : user.getRole().toLowerCase();
-//
-//        if ("admin".equals(role)) {
-//            resp.sendRedirect(req.getContextPath() + "/admin/home.jsp");
-//        } else {
-//            resp.sendRedirect(req.getContextPath() + "/customer/home.jsp");
-//        }
-    }
-
-    private void handleDefaultRedirect(HttpServletRequest req, HttpServletResponse resp, User user)
-            throws IOException {
-        String role = user.getRole() == null ? "" : user.getRole().toLowerCase();
+        // Admin → /admin/home, user thường → trang chủ
         if ("admin".equals(role)) {
-            resp.sendRedirect(req.getContextPath() + "/admin/home.jsp");
+            resp.sendRedirect(req.getContextPath() + "/admin/home");
         } else {
-            resp.sendRedirect(req.getContextPath() + "/products");  // Về trang sản phẩm cho customer
+            resp.sendRedirect(req.getContextPath() + "/");
         }
     }
 }

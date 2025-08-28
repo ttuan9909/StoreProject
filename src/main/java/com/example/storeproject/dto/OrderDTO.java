@@ -51,4 +51,8 @@ public class OrderDTO {
                 ", totalPrice=" + totalPrice +
                 '}';
     }
+
+    public String getStatus() {
+        return orderStatus;
+    }
 }

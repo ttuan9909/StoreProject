@@ -24,19 +24,14 @@ tasks.withType(JavaCompile) {
 dependencies {
     compileOnly('javax.servlet:javax.servlet-api:4.0.1')
     
-    // MySQL Connector
+    // MySQL Connector (single version)
     implementation 'mysql:mysql-connector-java:8.0.33'
     
     // JSON processing
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     
-    // JSTL for JSP
+    // JSTL for JSP (single declaration)
     implementation 'javax.servlet:jstl:1.2'
-
-    // JSTL
-    implementation("javax.servlet:jstl:1.2")
-
-    // MySQL Connector
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
