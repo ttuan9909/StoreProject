@@ -9,6 +9,7 @@ import java.util.List;
 public interface IOrderRepository {
     Order createOrder(Order order);
     boolean createOrderDetail(OrderDetail orderDetail);
+    List<OrderDTO> findOrdersByStatus(String keyword, String status);
     List<Order> getOrdersByUserId(int userId);
     Order getOrderById(int orderId);
     List<OrderDetail> getOrderDetails(int orderId);

@@ -1,148 +1,226 @@
 package com.example.storeproject.controller;
 
+import com.example.storeproject.dto.OrderDTO;
+import com.example.storeproject.dto.OrderDetailDTO;
 import com.example.storeproject.entity.Order;
-import com.example.storeproject.entity.OrderDetail;
 import com.example.storeproject.service.order.IOrderService;
 import com.example.storeproject.service.order.OrderService;
-import com.example.storeproject.service.cart.ICartService;
-import com.example.storeproject.service.cart.CartService;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "OrderServlet", urlPatterns = {"/order", "/order/*"})
+@WebServlet(name = "OrderServlet", urlPatterns = {
+    "/orders", 
+    "/orders/*",
+    "/order/list",
+    "/order/detail/*"
+})
 public class OrderServlet extends HttpServlet {
     private static final IOrderService orderService = new OrderService();
-    private static final ICartService cartService = new CartService();
-    
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        HttpSession session = request.getSession();
-        Integer userId = (Integer) session.getAttribute("userId");
-        System.out.println("OrderServlet doGet: Session ID: " + session.getId());
-        System.out.println("OrderServlet doGet: userId from session: " + userId);
+        String requestURI = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String path = requestURI.substring(contextPath.length());
 
-        if (userId == null) {
-            // Lưu URL gốc (bao gồm query string nếu có)
-            String currentUrl = request.getRequestURI();
-            if (request.getQueryString() != null) {
-                currentUrl += "?" + request.getQueryString();
-            }
-            System.out.println("OrderServlet doGet: No userId, saving redirect: " + currentUrl);
-            session.setAttribute("redirectAfterLogin", currentUrl);
-
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-        
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null || "/".equals(pathInfo)) {
-            showOrderHistory(request, response, userId);
-        } else if (pathInfo.startsWith("/detail/")) {
-            showOrderDetail(request, response, userId);
+        if (path.equals("/orders") || path.equals("/order/list")) {
+            showOrderList(request, response);
+        } else if (path.startsWith("/order/detail/")) {
+            showOrderDetail(request, response);
+        } else if (path.startsWith("/orders/detail/")) {
+            showOrderDetail(request, response);
         } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
-    
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+
+    private void showOrderList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        HttpSession session = request.getSession();
-        Integer userId = (Integer) session.getAttribute("userId");
-        System.out.println("OrderServlet doPost: Session ID: " + session.getId());
-        System.out.println("OrderServlet doPost: userId from session: " + userId);
+        String keyword = request.getParameter("q");
+        String status = request.getParameter("status");
 
-        if (userId == null) {
-            // Lưu URL gốc (bao gồm query string nếu có)
-            String currentUrl = request.getRequestURI();
-            if (request.getQueryString() != null) {
-                currentUrl += "?" + request.getQueryString();
-            }
-            System.out.println("OrderServlet doPost: No userId, saving redirect: " + currentUrl);
-            session.setAttribute("redirectAfterLogin", currentUrl);
+        List<OrderDTO> orderDTOList;
+        if (status == null || status.trim().isEmpty()) {
+            orderDTOList = orderService.findOrders(keyword);
+        } else {
+            orderDTOList = orderService.findOrdersByStatus(keyword, status.trim());
+        }
 
-            response.sendRedirect(request.getContextPath() + "/login");
+        String statusDisplayName = getStatusDisplayName(status);
+        request.setAttribute("statusDisplayName", statusDisplayName);
+        request.setAttribute("orders", orderDTOList);
+        request.setAttribute("q", keyword);
+        request.setAttribute("status", status);
+        request.getRequestDispatcher("/order/Order-list.jsp").forward(request, response);
+    }
+
+    private String getStatusDisplayName(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return "Tất cả đơn hàng";
+        }
+        switch (status.trim()) {
+            case "cho_xu_ly":
+                return "Đơn hàng chờ xử lý";
+            case "dang_xu_ly":
+                return "Đơn hàng đang xử lý";
+            case "cho_duyet":
+                return "Đơn hàng chờ duyệt";
+            case "hoan_thanh":
+                return "Đơn hàng đã hoàn thành";
+            case "huy":
+                return "Đơn hàng đã huỷ";
+            default:
+                return "Đơn hàng";
+        }
+    }
+
+    private String getStatusDisplayNameForOrder(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return "Không xác định";
+        }
+        switch (status.trim()) {
+            case "cho_xu_ly":
+                return "Chờ xử lý";
+            case "dang_xu_ly":
+                return "Đang xử lý";
+            case "cho_duyet":
+                return "Chờ duyệt";
+            case "hoan_thanh":
+                return "Hoàn thành";
+            case "huy":
+                return "Đã huỷ";
+            default:
+                return status;
+        }
+    }
+
+    private void showOrderDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String pathInfo = request.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        
-        String action = request.getParameter("action");
-        
-        if ("create".equals(action)) {
-            createOrder(request, response, userId);
-        } else {
+
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length < 3) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
         }
-    }
-    
-    private void showOrderHistory(HttpServletRequest request, HttpServletResponse response, int userId) 
-            throws ServletException, IOException {
-        
-        List<Order> orders = orderService.getOrdersByUserId(userId);
-        request.setAttribute("orders", orders);
-        
-        request.getRequestDispatcher("/WEB-INF/page/order/order-history.jsp").forward(request, response);
-    }
-    
-    private void showOrderDetail(HttpServletRequest request, HttpServletResponse response, int userId) 
-            throws ServletException, IOException {
-        
-        String pathInfo = request.getPathInfo();
-        String orderIdStr = pathInfo.substring("/detail/".length());
-        
+
         try {
-            int orderId = Integer.parseInt(orderIdStr);
+            int orderId = Integer.parseInt(pathParts[2]);
             Order order = orderService.getOrderById(orderId);
             
-            if (order != null && order.getUserId() == userId) {
-                List<OrderDetail> orderDetails = orderService.getOrderDetails(orderId);
-                
-                request.setAttribute("order", order);
-                request.setAttribute("orderDetails", orderDetails);
-                
-                request.getRequestDispatcher("/WEB-INF/page/order/order-detail.jsp").forward(request, response);
-            } else {
+            if (order == null) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
             }
-        } catch (NumberFormatException e) {
+
+            List<OrderDetailDTO> orderDetails = orderService.findOrderDetailsWithProductName(orderId);
+            
+            String statusDisplayName = getStatusDisplayNameForOrder(order.getOrderStatus());
+            
+            request.setAttribute("order", order);
+            request.setAttribute("orderDetails", orderDetails);
+            request.setAttribute("statusDisplayName", statusDisplayName);
+            request.getRequestDispatcher("/order/Order-detail.jsp").forward(request, response);
+        } catch (NumberFormatException ex) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
-    
-    private void createOrder(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        try {
-            // Lấy tổng tiền giỏ hàng
-            double cartTotal = cartService.getCartTotal(userId);
-            
-            if (cartTotal > 0) {
-                // Tạo đơn hàng từ giỏ hàng
-                Order order = orderService.createOrderFromCart(userId, cartTotal, null);
-                
-                if (order != null) {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": true, \"message\": \"Đặt hàng thành công\", \"orderId\": " + order.getOrderId() + "}");
-                } else {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": false, \"message\": \"Không thể tạo đơn hàng\"}");
+        String action = request.getParameter("action");
+        if (action == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        switch (action) {
+            case "approve": {
+                String orderIdParam = request.getParameter("orderId");
+                try {
+                    int orderId = Integer.parseInt(orderIdParam);
+                    boolean updated = orderService.updateOrderStatus(orderId, "hoan_thanh");
+                    if (updated) {
+                        response.sendRedirect(request.getContextPath() + "/order/detail/" + orderId + "?msg=approved");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/order/detail/" + orderId + "?msg=approve_failed");
+                    }
+                } catch (NumberFormatException ex) {
+                    response.sendRedirect(request.getContextPath() + "/orders?msg=invalid_order");
                 }
-            } else {
-                response.setContentType("application/json");
-                response.getWriter().write("{\"success\": false, \"message\": \"Giỏ hàng trống\"}");
+                return;
             }
-        } catch (Exception e) {
-            response.setContentType("application/json");
-            response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra khi đặt hàng\"}");
+            case "process": {
+                String orderIdParam = request.getParameter("orderId");
+                try {
+                    int orderId = Integer.parseInt(orderIdParam);
+                    boolean updated = orderService.updateOrderStatus(orderId, "dang_xu_ly");
+                    if (updated) {
+                        response.sendRedirect(request.getContextPath() + "/orders?status=cho_xu_ly&msg=processing_started");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/orders?status=cho_xu_ly&msg=processing_failed");
+                    }
+                } catch (NumberFormatException ex) {
+                    response.sendRedirect(request.getContextPath() + "/orders?msg=invalid_order");
+                }
+                return;
+            }
+            case "readyForApproval": {
+                String orderIdParam = request.getParameter("orderId");
+                try {
+                    int orderId = Integer.parseInt(orderIdParam);
+                    boolean updated = orderService.updateOrderStatus(orderId, "cho_duyet");
+                    if (updated) {
+                        response.sendRedirect(request.getContextPath() + "/orders?status=dang_xu_ly&msg=ready_for_approval");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/orders?status=dang_xu_ly&msg=status_update_failed");
+                    }
+                } catch (NumberFormatException ex) {
+                    response.sendRedirect(request.getContextPath() + "/orders?msg=invalid_order");
+                }
+                return;
+            }
+            case "cancel": {
+                String orderIdParam = request.getParameter("orderId");
+                try {
+                    int orderId = Integer.parseInt(orderIdParam);
+                    boolean updated = orderService.updateOrderStatus(orderId, "huy");
+                    if (updated) {
+                        response.sendRedirect(request.getContextPath() + "/orders?msg=order_cancelled");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/orders?msg=cancel_failed");
+                    }
+                } catch (NumberFormatException ex) {
+                    response.sendRedirect(request.getContextPath() + "/orders?msg=invalid_order");
+                }
+                return;
+            }
+            case "deleteItem": {
+                String orderIdParam = request.getParameter("orderId");
+                String productIdParam = request.getParameter("productId");
+                try {
+                    int orderId = Integer.parseInt(orderIdParam);
+                    int productId = Integer.parseInt(productIdParam);
+                    orderService.deleteOrderItem(orderId, productId);
+                    response.sendRedirect(request.getContextPath() + "/order/detail/" + orderId + "?msg=item_deleted");
+                } catch (NumberFormatException ex) {
+                    response.sendRedirect(request.getContextPath() + "/orders?msg=invalid_params");
+                }
+                return;
+            }
+            default:
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 }

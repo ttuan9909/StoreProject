@@ -312,5 +312,49 @@ public class OrderRepository implements IOrderRepository {
         orderDetail.setPrice(resultSet.getDouble("gia"));
         return orderDetail;
     }
+
+    @Override
+    public List<OrderDTO> findOrdersByStatus(String keyword, String status) {
+        List<OrderDTO> list = new ArrayList<>();
+
+        String sql = "SELECT dh.ma_don_hang, dh.ma_nguoi_dung, nd.ho_ten, dh.ngay_dat, dh.trang_thai, dh.tong_tien " +
+                "FROM don_hang dh JOIN nguoi_dung nd ON dh.ma_nguoi_dung = nd.ma_nguoi_dung " +
+                "WHERE dh.trang_thai = ? AND (nd.ho_ten LIKE ? OR dh.ma_don_hang = ?) " +
+                "ORDER BY dh.ngay_dat DESC";
+
+        Integer exactId = null;
+        try {
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                exactId = Integer.parseInt(keyword.trim());
+            }
+        } catch (Exception ignored) {}
+
+        try (Connection connection = DatabaseConnection.getConnectDB();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setString(1, status);
+            String pattern = "%" + (keyword == null ? "" : keyword.trim()) + "%";
+            ps.setString(2, pattern);
+            ps.setInt(3, exactId == null ? -1 : exactId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderDTO dto = new OrderDTO(
+                            rs.getInt("ma_don_hang"),
+                            rs.getInt("ma_nguoi_dung"),
+                            rs.getString("ho_ten"),
+                            rs.getTimestamp("ngay_dat") == null ? null : rs.getTimestamp("ngay_dat").toLocalDateTime(),
+                            rs.getString("trang_thai"),
+                            rs.getDouble("tong_tien")
+                    );
+                    list.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
 }
 

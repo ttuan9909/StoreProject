@@ -14,6 +14,7 @@ import com.example.storeproject.service.cart.CartService;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class OrderService implements IOrderService {
     private final IOrderRepository orderRepository;
@@ -100,5 +101,29 @@ public class OrderService implements IOrderService {
     @Override
     public boolean deleteOrderItem(int orderId, int productId) {
         return orderRepository.deleteOrderItem(orderId, productId);
+    }
+
+    @Override
+    public List<OrderDTO> findOrdersByStatus(String keyword, String status) {
+        // Lấy danh sách theo keyword (có thể rỗng)
+        List<OrderDTO> base = findOrders(keyword);
+
+        // Nếu không truyền trạng thái thì trả luôn danh sách gốc
+        if (status == null || status.trim().isEmpty()) {
+            return base;
+        }
+
+        String s = status.trim().toLowerCase();
+
+        // Lọc theo trạng thái (so sánh không phân biệt hoa thường)
+        return base.stream()
+                .filter(o -> {
+                    String st = null;
+                    try {
+                        st = o.getStatus();
+                    } catch (Exception ignore) {}
+                    return st != null && st.toLowerCase().equals(s);
+                })
+                .collect(Collectors.toList());
     }
 }
