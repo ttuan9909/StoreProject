@@ -95,19 +95,15 @@ public class CartServlet extends HttpServlet {
     
     private void showCart(HttpServletRequest request, HttpServletResponse response, int userId) 
             throws ServletException, IOException {
-        
+
         List<CartDetail> cartItems = cartService.getCartItems(userId);
         double cartTotal = cartService.getCartTotal(userId);
-        
-        // Lấy thông tin sản phẩm cho mỗi item trong giỏ hàng
-        for (CartDetail cartItem : cartItems) {
-            Product product = productService.getProductById(cartItem.getProductId());
-            if (product != null) {
-                // Tạo một object mới để chứa thông tin sản phẩm và số lượng
-                request.setAttribute("cartItems", cartItems);
-                request.setAttribute("cartTotal", cartTotal);
-            }
+        System.out.println("CartServlet: showCart - userId=" + userId + ", cartItems=" + (cartItems != null ? cartItems.size() : 0));
+        for (CartDetail item : cartItems) {
+            System.out.println("CartServlet: cartItem - productId=" + item.getProductId() + ", quantity=" + item.getQuantity() + ", price=" + item.getPrice());
         }
+        request.setAttribute("cartItems", cartItems);
+        request.setAttribute("cartTotal", cartTotal);
         
         request.getRequestDispatcher("/WEB-INF/page/cart/cart.jsp").forward(request, response);
     }

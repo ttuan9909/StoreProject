@@ -187,7 +187,12 @@
             input.addEventListener('change', function() {
                 const productId = this.dataset.productId;
                 const quantity = parseInt(this.value);
-                
+
+                if (!productId) {
+                    console.error('No data-product-id found for input:', this);
+                    alert('Lỗi: Không tìm thấy ID sản phẩm');
+                    return;
+                }
                 if (quantity < 1) {
                     this.value = 1;
                     return;
