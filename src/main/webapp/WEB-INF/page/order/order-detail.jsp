@@ -130,8 +130,8 @@
                     <div class="order-item">
                         <div class="row align-items-center">
                             <div class="col-md-2">
-                                <img src="https://via.placeholder.com/60x60?text=Product" 
-                                     alt="Product" class="img-fluid rounded">
+                                <img src="${empty orderDetail.imageUrl ? 'https://via.placeholder.com/60x60?text=Product' : orderDetail.imageUrl}"
+                                     alt="${orderDetail.productName}" class="img-fluid rounded">
                             </div>
                             <div class="col-md-4">
                                 <h6 class="mb-1">Sản phẩm #${orderDetail.productId}</h6>

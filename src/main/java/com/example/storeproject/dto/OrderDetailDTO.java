@@ -7,16 +7,18 @@ public class OrderDetailDTO {
     private String productName;
     private int quantity;
     private double price;
+    private String imageUrl;
 
     public OrderDetailDTO() {
     }
 
-    public OrderDetailDTO(int orderId, int productId, String productName, int quantity, double price) {
+    public OrderDetailDTO(int orderId, int productId, String productName, int quantity, double price, String imageUrl) {
         this.orderId = orderId;
         this.productId = productId;
         this.productName = productName;
         this.quantity = quantity;
         this.price = price;
+        this.imageUrl = imageUrl;
     }
 
     // Getter & Setter
@@ -59,6 +61,10 @@ public class OrderDetailDTO {
     public void setPrice(double price) {
         this.price = price;
     }
+
+    public String getImageUrl() { return imageUrl; }
+
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     @Override
     public String toString() {

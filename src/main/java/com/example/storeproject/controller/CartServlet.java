@@ -114,6 +114,8 @@ public class CartServlet extends HttpServlet {
 
     private void addToCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
@@ -181,14 +183,11 @@ public class CartServlet extends HttpServlet {
 
             boolean success = cartService.updateProductQuantity(userId, productId, quantity);
             if (success) {
-                // Lấy giá đơn vị và tổng giá trị giỏ hàng
-                List<CartDetail> cartItems = cartService.getCartItems(userId);
-                double price = cartItems.stream()
-                        .filter(item -> item.getProductId() == productId)
-                        .findFirst()
-                        .map(CartDetail::getPrice)
-                        .orElse(0.0);
+                // Sử dụng giá từ Product thay vì CartDetail để đảm bảo giá chính xác
+                double price = product.getPrice();
                 double cartTotal = cartService.getCartTotal(userId);
+
+                System.out.println("CartServlet: updateCartItem - price=" + price + ", cartTotal=" + cartTotal);
 
                 response.getWriter().write(
                         "{\"success\": true, \"message\": \"Cập nhật giỏ hàng thành công\", \"price\": " + price + ", \"cartTotal\": " + cartTotal + "}"
@@ -208,6 +207,8 @@ public class CartServlet extends HttpServlet {
 
     private void removeFromCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
@@ -231,6 +232,9 @@ public class CartServlet extends HttpServlet {
 
     private void clearCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
         boolean success = cartService.clearCart(userId);
 

@@ -1,5 +1,6 @@
 package com.example.storeproject.controller;
 
+import com.example.storeproject.dto.OrderDetailDTO;
 import com.example.storeproject.entity.Cart;
 import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.entity.Order;
@@ -8,7 +9,6 @@ import com.example.storeproject.service.order.IOrderService;
 import com.example.storeproject.service.order.OrderService;
 import com.example.storeproject.service.cart.ICartService;
 import com.example.storeproject.service.cart.CartService;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -107,7 +107,7 @@ public class OrderServlet extends HttpServlet {
             Order order = orderService.getOrderById(orderId);
 
             if (order != null && order.getUserId() == userId) {
-                List<OrderDetail> orderDetails = orderService.getOrderDetails(orderId);
+                List<OrderDetailDTO> orderDetails = orderService.getOrderDetails(orderId);
 
                 request.setAttribute("order", order);
                 request.setAttribute("orderDetails", orderDetails);

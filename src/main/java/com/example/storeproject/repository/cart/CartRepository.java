@@ -69,7 +69,9 @@ public class CartRepository implements ICartRepository {
             try (ResultSet rs = checkPs.executeQuery()) {
                 if (rs.next()) {
                     // Sản phẩm đã có, cập nhật số lượng
-                    return updateProductQuantity(cartId, productId, quantity);
+                    int existingQuantity = rs.getInt("so_luong");
+                    int newQuantity = existingQuantity + quantity;
+                    return updateProductQuantity(cartId, productId, newQuantity);
                 } else {
                     // Sản phẩm chưa có, thêm mới
                     String insertSql = "INSERT INTO chi_tiet_gio_hang (ma_gio_hang, ma_san_pham, so_luong, gia) VALUES (?, ?, ?, ?)";
@@ -132,7 +134,10 @@ public class CartRepository implements ICartRepository {
     @Override
     public List<CartDetail> getCartItems(int cartId) {
         List<CartDetail> cartItems = new ArrayList<>();
-        String sql = "SELECT * FROM chi_tiet_gio_hang WHERE ma_gio_hang = ?";
+        String sql = "SELECT c.*, p.ten_san_pham, p.hinh_anh, p.mo_ta " +
+                "FROM chi_tiet_gio_hang c " +
+                "JOIN san_pham p ON c.ma_san_pham = p.ma_san_pham " +
+                "WHERE c.ma_gio_hang = ?";
 
         try (Connection conn = DBConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -141,7 +146,7 @@ public class CartRepository implements ICartRepository {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    CartDetail cartItem = mapResultSetToCartDetail(rs);
+                    CartDetail cartItem = mapResultSetToCartDetailWithProduct(rs);
                     cartItems.add(cartItem);
                 }
             }
@@ -211,6 +216,21 @@ public class CartRepository implements ICartRepository {
         cartDetail.setProductId(rs.getInt("ma_san_pham"));
         cartDetail.setQuantity(rs.getInt("so_luong"));
         cartDetail.setPrice(rs.getDouble("gia"));
+        return cartDetail;
+    }
+
+    private CartDetail mapResultSetToCartDetailWithProduct(ResultSet rs) throws SQLException {
+        CartDetail cartDetail = new CartDetail();
+        cartDetail.setCartId(rs.getInt("ma_gio_hang"));
+        cartDetail.setProductId(rs.getInt("ma_san_pham"));
+        cartDetail.setQuantity(rs.getInt("so_luong"));
+        cartDetail.setPrice(rs.getDouble("gia"));
+
+        // Thêm thông tin sản phẩm
+        cartDetail.setProductName(rs.getString("ten_san_pham"));
+        cartDetail.setProductImage(rs.getString("hinh_anh"));
+        cartDetail.setProductDescription(rs.getString("mo_ta"));
+
         return cartDetail;
     }
 }

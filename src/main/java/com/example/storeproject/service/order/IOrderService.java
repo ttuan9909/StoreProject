@@ -18,4 +18,5 @@ public interface IOrderService {
     List<OrderDTO> findOrdersAll();
     List<OrderDetailDTO> findOrderDetailsWithProductName(int orderId);
     boolean deleteOrderItem(int orderId, int productId);
+    List<OrderDetailDTO> getOrderDetailsByOrderId(int orderId);
 }

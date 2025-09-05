@@ -20,4 +20,18 @@ public class DBConnection {
         }
         return connection;
     }
+
+    public static void main(String[] args) {
+        Connection conn = getConnectDB();
+        if (conn != null) {
+            System.out.println("✅ Kết nối database thành công!");
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("❌ Kết nối database thất bại!");
+        }
+    }
 }
