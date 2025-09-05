@@ -4,45 +4,49 @@
   Date: 8/22/2025
   Time: 12:14 PM
 --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<html>
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <title>Order Detail</title>
+  <meta charset="UTF-8">
+  <title>Danh sách đơn hàng</title>
 </head>
 <body>
-<h2>Order Detail - ID: ${orderId}</h2>
-
-<a href="${pageContext.request.contextPath}/admin/order">← Back to Orders</a>
-
-<table border="1" cellpadding="10" cellspacing="0">
+<h2>Danh sách đơn hàng</h2>
+<form method="get" action="${pageContext.request.contextPath}/admin/order">
+  <input type="text" name="q" value="${q}" placeholder="Tìm theo tên khách hoặc mã đơn hàng">
+  <button type="submit">Tìm kiếm</button>
+</form>
+<table border="1" cellspacing="0" cellpadding="6">
   <thead>
   <tr>
-    <th>Product</th>
-    <th>Quantity</th>
-    <th>Price</th>
-    <th>Remove</th>
+    <th>Mã đơn</th>
+    <th>Mã người dùng</th>
+    <th>Tên khách hàng</th>
+    <th>Ngày đặt</th>
+    <th>Trạng thái</th>
+    <th>Tổng tiền</th>
+    <th>Chi tiết</th>
   </tr>
   </thead>
   <tbody>
-  <!-- Servlet setAttribute("detailList", detailList) -->
-  <c:forEach items="${detailList}" var="d">
+  <c:forEach var="o" items="${orders}">
     <tr>
-      <td>${d.productName}</td>
-      <td>${d.quantity}</td>
-      <td>${d.price}</td>
-      <td>
-        <form action="${pageContext.request.contextPath}/admin/order" method="post" style="display:inline">
-          <input type="hidden" name="action" value="removeProduct"/>
-          <input type="hidden" name="orderId" value="${orderId}"/>
-          <input type="hidden" name="productId" value="${d.productId}"/>
-          <input type="submit" value="Remove"/>
-        </form>
-      </td>
+      <td>${o.orderId}</td>
+      <td>${o.userId}</td>
+      <td>${o.customerName}</td>
+      <td><c:out value="${o.orderDate}"/></td>
+      <td>${o.orderStatus}</td>
+      <td>${o.totalPrice}</td>
+      <td><a href="${pageContext.request.contextPath}/admin/order/detail/${o.orderId}">Xem</a></td>
     </tr>
   </c:forEach>
+  <c:if test="${empty orders}">
+    <tr><td colspan="7">Không có dữ liệu</td></tr>
+  </c:if>
   </tbody>
 </table>
-
+<p><a href="${pageContext.request.contextPath}/home.jsp">Trang chủ Admin</a></p>
 </body>
 </html>

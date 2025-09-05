@@ -2,9 +2,11 @@ package com.example.storeproject.repository.category;
 
 import com.example.storeproject.entity.Category;
 import com.example.storeproject.repository.DBConnection;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +18,6 @@ public class CategoryRepository implements ICategoryRepository {
     private static final String UPDATE_BY_ID   = "UPDATE danh_muc SET ten_danh_muc = ? WHERE ma_danh_muc = ?;";
     private static final String DELETE_BY_ID   = "DELETE FROM danh_muc WHERE ma_danh_muc = ?;";
     private static final String SEARCH_BY_NAME = "SELECT ma_danh_muc, ten_danh_muc FROM danh_muc WHERE ten_danh_muc LIKE ?;";
-
 
     @Override
     public List<Category> findAll() {
@@ -40,11 +41,15 @@ public class CategoryRepository implements ICategoryRepository {
              PreparedStatement ps = con.prepareStatement(SELECT_BY_ID)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return new Category(rs.getInt("ma_danh_muc"), rs.getString("ten_danh_muc"));
+                if (rs.next()) {
+                    return new Category(rs.getInt("ma_danh_muc"), rs.getString("ten_danh_muc"));
+                }
             }
         } catch (Exception e) {
             System.out.println("Lỗi query Category.findById");
-
+            e.printStackTrace();
+        }
+        return null; // ✅ đừng quên return
     }
 
     @Override
@@ -88,7 +93,7 @@ public class CategoryRepository implements ICategoryRepository {
 
     @Override
     public List<Category> searchByName(String keyword) {
-        String k = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        String k = (keyword == null) ? "" : keyword.trim();
         if (k.isEmpty()) return findAll();
 
         List<Category> results = new ArrayList<>();
@@ -105,6 +110,51 @@ public class CategoryRepository implements ICategoryRepository {
             e.printStackTrace();
         }
         return results.isEmpty() ? Collections.emptyList() : results;
+    }
 
+    @Override
+    public List<Category> getAllCategories() {
+        List<Category> categories = new ArrayList<>();
+        String sql = "SELECT * FROM danh_muc ORDER BY ten_danh_muc";
+
+        try (Connection conn = DBConnection.getConnectDB();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Category category = mapResultSetToCategory(rs);
+                categories.add(category);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return categories;
+    }
+
+    @Override
+    public Category getCategoryById(int categoryId) {
+            String sql = "SELECT * FROM danh_muc WHERE ma_danh_muc = ?";
+
+            try (Connection conn = DBConnection.getConnectDB();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setInt(1, categoryId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToCategory(rs);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return null;
+    }
+
+    private Category mapResultSetToCategory(ResultSet rs) throws SQLException {
+        Category category = new Category();
+        category.setCategoryId(rs.getInt("ma_danh_muc"));
+        category.setCategoryName(rs.getString("ten_danh_muc"));
+        return category;
     }
 }

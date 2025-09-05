@@ -1,6 +1,7 @@
 package com.example.storeproject.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class User {
     private Integer userId;
@@ -13,6 +14,8 @@ public class User {
     private String role;
     private LocalDate createdAt;
     private Integer positionId;
+    private LocalDateTime lastLogin;
+    private Boolean isActive;
 
     public User() {
     }
@@ -100,5 +103,21 @@ public class User {
 
     public void setPositionId(Integer positionId) {
         this.positionId = positionId;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
     }
 }

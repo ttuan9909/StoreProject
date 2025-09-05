@@ -151,7 +151,7 @@
         <label>Vai trò:
             <select name="vai_tro">
                 <option value="customer" selected>customer</option>
-                <option value="admin">admin</option>
+                <%--                <option value="admin">admin</option>--%>
                 <option value="staff">staff</option>
             </select>
         </label>

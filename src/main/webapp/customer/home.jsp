@@ -7,7 +7,7 @@
 </head>
 <body>
 <h2>Chào mừng Khách hàng!</h2>
-<p><a href="${pageContext.request.contextPath}/index.jsp">Trang chủ</a></p>
+<p><a href="${pageContext.request.contextPath}/WEB-INF/index.jsp">Trang chủ</a></p>
 <p><a href="${pageContext.request.contextPath}/login">Đăng xuất</a></p>
 </body>
 </html>

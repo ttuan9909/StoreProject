@@ -49,7 +49,7 @@
                 <i class="fas fa-shopping-cart"></i> WebShop
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="${pageContext.request.contextPath}/products">
+                <a class="nav-link" href="${pageContext.request.contextPath}/index.jsp">
                     <i class="fas fa-home"></i> Trang chủ
                 </a>
                 <a class="nav-link" href="${pageContext.request.contextPath}/cart">

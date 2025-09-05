@@ -15,4 +15,10 @@ public interface IProductRepository {
     boolean deleteById(int id);      // DELETE theo productId (bắt lỗi FK)
     List<ProductDto> searchByName(String keyword);
 
+    List<Product> getAllProducts();
+    List<Product> searchProducts(String keyword);
+    List<Product> getProductsByCategory(int categoryId);
+    Product getProductById(int productId);
+    List<Product> getProductsWithPagination(int offset, int limit);
+    int getTotalProductCount();
 }

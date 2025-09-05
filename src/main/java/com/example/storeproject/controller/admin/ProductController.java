@@ -1,4 +1,4 @@
-package com.example.storeproject.controller;
+package com.example.storeproject.controller.admin;
 
 import com.example.storeproject.dto.ProductDto;
 import com.example.storeproject.entity.Category;
@@ -7,18 +7,15 @@ import com.example.storeproject.service.category.ICategoryService;
 import com.example.storeproject.service.product.IProductService;
 import com.example.storeproject.service.product.ProductService;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-@WebServlet(name = "ProductController", urlPatterns = {"/products"})
+@WebServlet(name = "ProductController", urlPatterns = {"/admin/products"})
 public class ProductController extends HttpServlet {
 
     private final IProductService productService = new ProductService();
@@ -40,7 +37,7 @@ public class ProductController extends HttpServlet {
         req.setAttribute("categories", categories);
         req.setAttribute("q", q == null ? "" : q);
 
-        req.getRequestDispatcher("/products.jsp").forward(req, resp);
+        req.getRequestDispatcher("/admin/products.jsp").forward(req, resp);
     }
 
     @Override

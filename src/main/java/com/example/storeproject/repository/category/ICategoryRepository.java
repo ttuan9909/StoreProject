@@ -13,4 +13,6 @@ public interface ICategoryRepository {
     boolean deleteById(int id);
     List<Category> searchByName(String keyword);
 
+    List<Category> getAllCategories();
+    Category getCategoryById(int categoryId);
 }

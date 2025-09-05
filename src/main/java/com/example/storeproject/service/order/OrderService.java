@@ -1,6 +1,9 @@
 package com.example.storeproject.service.order;
 
 
+import com.example.storeproject.dto.OrderDTO;
+import com.example.storeproject.dto.OrderDetailDTO;
+import com.example.storeproject.entity.Cart;
 import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
@@ -23,37 +26,23 @@ public class OrderService implements IOrderService {
     }
     
     @Override
-    public Order createOrderFromCart(int userId, double totalPrice, Integer discountId) {
-        // Tạo đơn hàng mới
+    public Order createOrderFromCart(int userId, Cart cart, List<CartDetail> cartDetails) {
+        if (cart == null || cartDetails == null || cartDetails.isEmpty()) {
+            return null;
+        }
+
+        // Tính tổng tiền
+        double totalPrice = cartDetails.stream()
+                .mapToDouble(cd -> cd.getPrice() * cd.getQuantity())
+                .sum();
+
         Order order = new Order();
         order.setUserId(userId);
         order.setOrderStatus("cho_xu_ly");
         order.setTotalPrice(totalPrice);
-        order.setDiscountId(discountId);
-        order.setOrderDate(LocalDateTime.now());
-        
-        Order createdOrder = orderRepository.createOrder(order);
-        if (createdOrder != null) {
-            // Lấy các sản phẩm từ giỏ hàng
-            List<CartDetail> cartItems = cartService.getCartItems(userId);
-            
-            // Tạo chi tiết đơn hàng
-            for (CartDetail cartItem : cartItems) {
-                OrderDetail orderDetail = new OrderDetail();
-                orderDetail.setOrderId(createdOrder.getOrderId());
-                orderDetail.setProductId(cartItem.getProductId());
-                orderDetail.setQuantity(cartItem.getQuantity());
-                orderDetail.setPrice(cartItem.getPrice());
-                
-                orderRepository.createOrderDetail(orderDetail);
-            }
-            
-            // Xóa giỏ hàng sau khi tạo đơn hàng thành công
-            cartService.clearCart(userId);
-            
-            return createdOrder;
-        }
-        return null;
+        order.setDiscountId(null);
+
+        return orderRepository.createOrderFromCart(order, cartDetails);
     }
     
     @Override
@@ -75,5 +64,28 @@ public class OrderService implements IOrderService {
     public boolean updateOrderStatus(int orderId, String status) {
         return orderRepository.updateOrderStatus(orderId, status);
 
+    }
+
+    @Override
+    public List<OrderDTO> findOrders(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return orderRepository.findOrdersAll();
+        }
+        return orderRepository.findOrders(keyword.trim());
+    }
+
+    @Override
+    public List<OrderDTO> findOrdersAll() {
+        return orderRepository.findOrdersAll();
+    }
+
+    @Override
+    public List<OrderDetailDTO> findOrderDetailsWithProductName(int orderId) {
+        return orderRepository.findOrderDetailsWithProductName(orderId);
+    }
+
+    @Override
+    public boolean deleteOrderItem(int orderId, int productId) {
+        return orderRepository.deleteOrderItem(orderId, productId);
     }
 }

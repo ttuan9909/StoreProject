@@ -1,4 +1,4 @@
-package com.example.storeproject.controller;
+package com.example.storeproject.controller.admin;
 
 import com.example.storeproject.entity.Category;
 import com.example.storeproject.service.category.CategoryService;
@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "CategoryController", urlPatterns = {"/categories"})
+@WebServlet(name = "CategoryController", urlPatterns = {"/admin/categories"})
 public class CategoryController extends HttpServlet {
 
     private final ICategoryService service = new CategoryService();
@@ -28,7 +28,7 @@ public class CategoryController extends HttpServlet {
 
         req.setAttribute("categories", list);
         req.setAttribute("q", q == null ? "" : q);
-        req.getRequestDispatcher("/categories.jsp").forward(req, resp);
+        req.getRequestDispatcher("/admin/categories.jsp").forward(req, resp);
     }
 
     @Override

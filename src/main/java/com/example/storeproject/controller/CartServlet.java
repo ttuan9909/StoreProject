@@ -20,16 +20,16 @@ import java.util.List;
 public class CartServlet extends HttpServlet {
     private final ICartService cartService;
     private final IProductService productService;
-    
+
     public CartServlet() {
         this.cartService = new CartService();
         this.productService = new ProductService();
     }
-    
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
         System.out.println("CartServlet doGet: Session ID: " + session.getId());
@@ -47,7 +47,7 @@ public class CartServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        
+
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || "/".equals(pathInfo)) {
             showCart(request, response, userId);
@@ -55,11 +55,11 @@ public class CartServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
-    
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
         Integer userId = (Integer) session.getAttribute("userId");
         System.out.println("CartServlet doPost: Session ID: " + session.getId());
@@ -77,9 +77,9 @@ public class CartServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        
+
         String action = request.getParameter("action");
-        
+
         if ("add".equals(action)) {
             addToCart(request, response, userId);
         } else if ("update".equals(action)) {
@@ -92,13 +92,13 @@ public class CartServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
-    
-    private void showCart(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    private void showCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        
+
         List<CartDetail> cartItems = cartService.getCartItems(userId);
         double cartTotal = cartService.getCartTotal(userId);
-        
+
         // Lấy thông tin sản phẩm cho mỗi item trong giỏ hàng
         for (CartDetail cartItem : cartItems) {
             Product product = productService.getProductById(cartItem.getProductId());
@@ -108,13 +108,13 @@ public class CartServlet extends HttpServlet {
                 request.setAttribute("cartTotal", cartTotal);
             }
         }
-        
+
         request.getRequestDispatcher("/WEB-INF/page/cart/cart.jsp").forward(request, response);
     }
-    
-    private void addToCart(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    private void addToCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        
+
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
             int quantity = request.getParameter("quantity") != null ? Integer.parseInt(request.getParameter("quantity")) : 1;
@@ -151,60 +151,89 @@ public class CartServlet extends HttpServlet {
             response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra khi thêm sản phẩm.\"}");
         }
     }
-    
-    private void updateCartItem(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    private void updateCartItem(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
             int quantity = Integer.parseInt(request.getParameter("quantity"));
-            
-            if (quantity > 0) {
-                boolean success = cartService.updateProductQuantity(userId, productId, quantity);
-                
-                if (success) {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": true, \"message\": \"Cập nhật giỏ hàng thành công\"}");
-                } else {
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"success\": false, \"message\": \"Không thể cập nhật giỏ hàng\"}");
-                }
-            } else {
-                response.setContentType("application/json");
+            System.out.println("CartServlet: updateCartItem - userId=" + userId + ", productId=" + productId + ", quantity=" + quantity);
+
+            if (quantity <= 0) {
                 response.getWriter().write("{\"success\": false, \"message\": \"Số lượng phải lớn hơn 0\"}");
+                return;
+            }
+
+            // Kiểm tra số lượng tồn kho
+            Product product = productService.getProductById(productId);
+            if (product == null) {
+                System.out.println("CartServlet: Product not found for ID: " + productId);
+                response.getWriter().write("{\"success\": false, \"message\": \"Sản phẩm không tồn tại.\"}");
+                return;
+            }
+            if (quantity > product.getQuantity()) {
+                System.out.println("CartServlet: Quantity exceeds stock: requested=" + quantity + ", available=" + product.getQuantity());
+                response.getWriter().write("{\"success\": false, \"message\": \"Số lượng không đủ.\"}");
+                return;
+            }
+
+            boolean success = cartService.updateProductQuantity(userId, productId, quantity);
+            if (success) {
+                // Lấy giá đơn vị và tổng giá trị giỏ hàng
+                List<CartDetail> cartItems = cartService.getCartItems(userId);
+                double price = cartItems.stream()
+                        .filter(item -> item.getProductId() == productId)
+                        .findFirst()
+                        .map(CartDetail::getPrice)
+                        .orElse(0.0);
+                double cartTotal = cartService.getCartTotal(userId);
+
+                response.getWriter().write(
+                        "{\"success\": true, \"message\": \"Cập nhật giỏ hàng thành công\", \"price\": " + price + ", \"cartTotal\": " + cartTotal + "}"
+                );
+            } else {
+                response.getWriter().write("{\"success\": false, \"message\": \"Không thể cập nhật giỏ hàng\"}");
             }
         } catch (NumberFormatException e) {
-            response.setContentType("application/json");
+            System.out.println("CartServlet: NumberFormatException in updateCartItem - " + e.getMessage());
             response.getWriter().write("{\"success\": false, \"message\": \"Dữ liệu không hợp lệ\"}");
+        } catch (Exception e) {
+            System.out.println("CartServlet: Exception in updateCartItem - " + e.getMessage());
+            e.printStackTrace();
+            response.getWriter().write("{\"success\": false, \"message\": \"Lỗi server: " + e.getMessage() + "\"}");
         }
     }
-    
-    private void removeFromCart(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    private void removeFromCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        
+
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
-            
+            System.out.println("CartServlet removeFromCart: productId=" + productId + ", userId=" + userId);  // Debug
+
             boolean success = cartService.removeProductFromCart(userId, productId);
-            
+
             if (success) {
-                response.setContentType("application/json");
                 response.getWriter().write("{\"success\": true, \"message\": \"Đã xóa sản phẩm khỏi giỏ hàng\"}");
             } else {
-                response.setContentType("application/json");
                 response.getWriter().write("{\"success\": false, \"message\": \"Không thể xóa sản phẩm khỏi giỏ hàng\"}");
             }
         } catch (NumberFormatException e) {
-            response.setContentType("application/json");
+            System.out.println("CartServlet removeFromCart: NumberFormatException: " + e.getMessage());  // Debug
             response.getWriter().write("{\"success\": false, \"message\": \"Dữ liệu không hợp lệ\"}");
+        } catch (Exception e) {
+            System.out.println("CartServlet removeFromCart: Unexpected error: " + e.getMessage());  // Debug
+            response.getWriter().write("{\"success\": false, \"message\": \"Có lỗi xảy ra.\"}");
         }
     }
-    
-    private void clearCart(HttpServletRequest request, HttpServletResponse response, int userId) 
+
+    private void clearCart(HttpServletRequest request, HttpServletResponse response, int userId)
             throws ServletException, IOException {
-        
+
         boolean success = cartService.clearCart(userId);
-        
+
         if (success) {
             response.setContentType("application/json");
             response.getWriter().write("{\"success\": true, \"message\": \"Đã xóa toàn bộ giỏ hàng\"}");
