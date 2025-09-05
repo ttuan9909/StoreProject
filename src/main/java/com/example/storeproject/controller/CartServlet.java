@@ -111,6 +111,9 @@ public class CartServlet extends HttpServlet {
     private void addToCart(HttpServletRequest request, HttpServletResponse response, int userId) 
             throws ServletException, IOException {
         
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
             int quantity = request.getParameter("quantity") != null ? Integer.parseInt(request.getParameter("quantity")) : 1;
@@ -163,7 +166,9 @@ public class CartServlet extends HttpServlet {
             }
 
             // Kiểm tra số lượng tồn kho
+            System.out.println("CartServlet: updateCartItem - Looking for productId=" + productId);
             Product product = productService.getProductById(productId);
+            System.out.println("CartServlet: updateCartItem - Product found: " + (product != null ? product.getProductName() : "null"));
             if (product == null) {
                 System.out.println("CartServlet: Product not found for ID: " + productId);
                 response.getWriter().write("{\"success\": false, \"message\": \"Sản phẩm không tồn tại.\"}");
@@ -177,15 +182,12 @@ public class CartServlet extends HttpServlet {
 
             boolean success = cartService.updateProductQuantity(userId, productId, quantity);
             if (success) {
-                // Lấy giá đơn vị và tổng giá trị giỏ hàng
-                List<CartDetail> cartItems = cartService.getCartItems(userId);
-                double price = cartItems.stream()
-                        .filter(item -> item.getProductId() == productId)
-                        .findFirst()
-                        .map(CartDetail::getPrice)
-                        .orElse(0.0);
+                // Sử dụng giá từ Product thay vì CartDetail để đảm bảo giá chính xác
+                double price = product.getPrice();
                 double cartTotal = cartService.getCartTotal(userId);
 
+                System.out.println("CartServlet: updateCartItem - price=" + price + ", cartTotal=" + cartTotal);
+                
                 response.getWriter().write(
                         "{\"success\": true, \"message\": \"Cập nhật giỏ hàng thành công\", \"price\": " + price + ", \"cartTotal\": " + cartTotal + "}"
                 );
@@ -204,6 +206,9 @@ public class CartServlet extends HttpServlet {
     
     private void removeFromCart(HttpServletRequest request, HttpServletResponse response, int userId) 
             throws ServletException, IOException {
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
         
         try {
             int productId = Integer.parseInt(request.getParameter("productId"));
@@ -228,13 +233,14 @@ public class CartServlet extends HttpServlet {
     private void clearCart(HttpServletRequest request, HttpServletResponse response, int userId) 
             throws ServletException, IOException {
         
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
         boolean success = cartService.clearCart(userId);
         
         if (success) {
-            response.setContentType("application/json");
             response.getWriter().write("{\"success\": true, \"message\": \"Đã xóa toàn bộ giỏ hàng\"}");
         } else {
-            response.setContentType("application/json");
             response.getWriter().write("{\"success\": false, \"message\": \"Không thể xóa giỏ hàng\"}");
         }
     }

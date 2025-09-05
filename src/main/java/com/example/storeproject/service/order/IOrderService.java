@@ -1,5 +1,6 @@
 package com.example.storeproject.service.order;
 
+import com.example.storeproject.dto.OrderDetailDTO;
 import com.example.storeproject.entity.Cart;
 import com.example.storeproject.entity.CartDetail;
 import com.example.storeproject.entity.Order;
@@ -12,4 +13,5 @@ public interface IOrderService {
     Order getOrderById(int orderId);
     List<OrderDetail> getOrderDetails(int orderId);
     boolean updateOrderStatus(int orderId, String status);
+    List<OrderDetailDTO> getOrderDetailsByOrderId(int orderId);
 }

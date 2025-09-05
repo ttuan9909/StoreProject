@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBConnection {
     private static final String URL ="jdbc:mysql://localhost:3306/webshop"; // sửa lại tên của csdl
     private static final String USER ="root";// mặc định của mysql
-    private static final String PASS ="namkute";// do cài đặt khi cài đặt mysql
+    private static final String PASS ="namkute";// password database
     public static Connection getConnectDB(){
         Connection connection = null;
         try {
@@ -19,5 +19,20 @@ public class DBConnection {
             throwables.printStackTrace();
         }
         return connection;
+    }
+    
+    // Test method để kiểm tra kết nối database
+    public static void main(String[] args) {
+        Connection conn = getConnectDB();
+        if (conn != null) {
+            System.out.println("✅ Kết nối database thành công!");
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("❌ Kết nối database thất bại!");
+        }
     }
 }

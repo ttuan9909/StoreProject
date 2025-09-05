@@ -5,6 +5,11 @@ public class CartDetail {
     private int productId;
     private int quantity;
     private Double price;
+    
+    // Thông tin sản phẩm để hiển thị trong cart
+    private String productName;
+    private String productImage;
+    private String productDescription;
 
     public CartDetail() {
     }
@@ -46,5 +51,29 @@ public class CartDetail {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+    
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getProductImage() {
+        return productImage;
+    }
+
+    public void setProductImage(String productImage) {
+        this.productImage = productImage;
+    }
+
+    public String getProductDescription() {
+        return productDescription;
+    }
+
+    public void setProductDescription(String productDescription) {
+        this.productDescription = productDescription;
     }
 }

@@ -79,17 +79,29 @@ public class ProductRepository implements IProductRepository {
     public Product getProductById(int productId) {
         String sql = "SELECT * FROM san_pham WHERE ma_san_pham = ?";
         
+        System.out.println("ProductRepository: getProductById - Looking for productId=" + productId);
+        
         try (Connection conn = DBConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            if (conn == null) {
+                System.out.println("ProductRepository: Database connection is null!");
+                return null;
+            }
             
             ps.setInt(1, productId);
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapResultSetToProduct(rs);
+                    Product product = mapResultSetToProduct(rs);
+                    System.out.println("ProductRepository: Found product: " + product.getProductName());
+                    return product;
+                } else {
+                    System.out.println("ProductRepository: No product found with ID=" + productId);
                 }
             }
         } catch (SQLException e) {
+            System.out.println("ProductRepository: SQLException in getProductById - " + e.getMessage());
             e.printStackTrace();
         }
         return null;
