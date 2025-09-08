@@ -4,10 +4,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+// KHÔNG SỬ DỤNG - Đã chuyển sang sử dụng DatabaseConnection
+// @Deprecated - Sử dụng DatabaseConnection thay thế
 public class DBConnection {
     private static final String URL ="jdbc:mysql://localhost:3306/webshop"; // sửa lại tên của csdl
     private static final String USER ="root";// mặc định của mysql
     private static final String PASS ="codegym";// do cài đặt khi cài đặt mysql
+    
+    // KHÔNG SỬ DỤNG - Đã chuyển sang sử dụng DatabaseConnection
+    @Deprecated
     public static Connection getConnectDB(){
         Connection connection = null;
         try {

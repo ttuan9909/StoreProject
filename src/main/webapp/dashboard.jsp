@@ -55,6 +55,9 @@
                 <a class="nav-link" href="${pageContext.request.contextPath}/order">
                     <i class="fas fa-list"></i> Đơn hàng
                 </a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/login/Login.jsp">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </a>
             </div>
         </div>
     </nav>
@@ -64,9 +67,14 @@
         <div class="container">
             <h1 class="display-4 mb-4">Chào mừng đến với WebShop</h1>
             <p class="lead mb-4">Khám phá các sản phẩm chất lượng với giá cả hợp lý</p>
-            <a href="${pageContext.request.contextPath}/products" class="btn btn-light btn-lg">
-                <i class="fas fa-shopping-bag"></i> Bắt đầu mua sắm
-            </a>
+            <div class="d-grid gap-3 d-md-block">
+                <a href="${pageContext.request.contextPath}/products" class="btn btn-light btn-lg me-md-3">
+                    <i class="fas fa-shopping-bag"></i> Bắt đầu mua sắm
+                </a>
+                <a href="${pageContext.request.contextPath}/login/Login.jsp" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </a>
+            </div>
         </div>
     </div>
 

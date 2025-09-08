@@ -110,13 +110,26 @@ public class AdminServlet extends HttpServlet {
         
         try {
             int orderId = Integer.parseInt(orderIdString);
+            System.out.println("DEBUG: AdminServlet - Processing order detail for orderId: " + orderId);
+            
             Order order = orderService.getOrderById(orderId);
+            if (order == null) {
+                System.err.println("ERROR: Order not found for orderId: " + orderId);
+                response.sendRedirect(request.getContextPath() + "/admin/order");
+                return;
+            }
+            System.out.println("DEBUG: Found order: " + order.getOrderId() + ", Status: " + order.getOrderStatus());
+            
+
+            
             List<OrderDetailDTO> details = orderService.findOrderDetailsWithProductName(orderId);
+            System.out.println("DEBUG: Order details list size: " + (details != null ? details.size() : "null"));
 
             request.setAttribute("order", order);
             request.setAttribute("details", details);
             request.getRequestDispatcher("/order/Order-detail.jsp").forward(request, response);
         } catch (NumberFormatException e) {
+            System.err.println("ERROR: Invalid orderId format: " + orderIdString);
             response.sendRedirect(request.getContextPath() + "/admin/order");
         }
     }

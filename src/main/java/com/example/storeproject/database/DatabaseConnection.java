@@ -18,6 +18,7 @@ public class DatabaseConnection {
             return null;
         }
     }
+    
     public static void main(String[] args) {
         Connection conn = getConnectDB();
         if (conn != null) {

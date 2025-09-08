@@ -1,7 +1,7 @@
 package com.example.storeproject.repository.product;
 
 import com.example.storeproject.entity.Product;
-import com.example.storeproject.repository.DBConnection;
+import com.example.storeproject.database.DatabaseConnection;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -9,13 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductRepository implements IProductRepository {
-    
+
     @Override
     public List<Product> getAllProducts() {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM san_pham ORDER BY ngay_tao DESC";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             
@@ -28,13 +28,13 @@ public class ProductRepository implements IProductRepository {
         }
         return products;
     }
-    
+
     @Override
     public List<Product> searchProducts(String keyword) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM san_pham WHERE ten_san_pham LIKE ? OR mo_ta LIKE ? ORDER BY ngay_tao DESC";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             String searchPattern = "%" + keyword + "%";
@@ -52,13 +52,13 @@ public class ProductRepository implements IProductRepository {
         }
         return products;
     }
-    
+
     @Override
     public List<Product> getProductsByCategory(int categoryId) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM san_pham WHERE ma_danh_muc = ? ORDER BY ngay_tao DESC";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, categoryId);
@@ -74,12 +74,12 @@ public class ProductRepository implements IProductRepository {
         }
         return products;
     }
-    
+
     @Override
     public Product getProductById(int productId) {
         String sql = "SELECT * FROM san_pham WHERE ma_san_pham = ?";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, productId);
@@ -94,13 +94,13 @@ public class ProductRepository implements IProductRepository {
         }
         return null;
     }
-    
+
     @Override
     public List<Product> getProductsWithPagination(int offset, int limit) {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM san_pham ORDER BY ngay_tao DESC LIMIT ? OFFSET ?";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, limit);
@@ -117,12 +117,12 @@ public class ProductRepository implements IProductRepository {
         }
         return products;
     }
-    
+
     @Override
     public int getTotalProductCount() {
         String sql = "SELECT COUNT(*) FROM san_pham";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             
@@ -134,7 +134,7 @@ public class ProductRepository implements IProductRepository {
         }
         return 0;
     }
-    
+
     private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
         Product product = new Product();
         product.setProductId(rs.getInt("ma_san_pham"));

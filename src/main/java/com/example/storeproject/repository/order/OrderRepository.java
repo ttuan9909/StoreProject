@@ -1,11 +1,11 @@
 package com.example.storeproject.repository.order;
 
-import com.example.storeproject.database.DatabaseConnection;
+
 import com.example.storeproject.dto.OrderDTO;
 import com.example.storeproject.dto.OrderDetailDTO;
 import com.example.storeproject.entity.Order;
 import com.example.storeproject.entity.OrderDetail;
-import com.example.storeproject.repository.DBConnection;
+import com.example.storeproject.database.DatabaseConnection;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -19,7 +19,7 @@ public class OrderRepository implements IOrderRepository {
     public Order createOrder(Order order) {
         String sql = "INSERT INTO don_hang (ma_nguoi_dung, trang_thai, tong_tien, ma_khuyen_mai) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setInt(1, order.getUserId());
@@ -53,7 +53,7 @@ public class OrderRepository implements IOrderRepository {
     public boolean createOrderDetail(OrderDetail orderDetail) {
         String sql = "INSERT INTO chi_tiet_don_hang (ma_don_hang, ma_san_pham, so_luong, gia) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, orderDetail.getOrderId());
@@ -73,7 +73,7 @@ public class OrderRepository implements IOrderRepository {
         List<Order> orders = new ArrayList<>();
         String sql = "SELECT * FROM don_hang WHERE ma_nguoi_dung = ? ORDER BY ngay_dat DESC";
 
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
@@ -94,7 +94,7 @@ public class OrderRepository implements IOrderRepository {
     public Order getOrderById(int orderId) {
         String sql = "SELECT * FROM don_hang WHERE ma_don_hang = ?";
 
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, orderId);
@@ -115,7 +115,7 @@ public class OrderRepository implements IOrderRepository {
         List<OrderDetail> orderDetails = new ArrayList<>();
         String sql = "SELECT * FROM chi_tiet_don_hang WHERE ma_don_hang = ?";
 
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, orderId);
@@ -136,7 +136,7 @@ public class OrderRepository implements IOrderRepository {
     public boolean updateOrderStatus(int orderId, String status) {
         String sql = "UPDATE don_hang SET trang_thai = ? WHERE ma_don_hang = ?";
 
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, status);
@@ -252,26 +252,51 @@ public class OrderRepository implements IOrderRepository {
         String sql = "SELECT ctdh.ma_don_hang, ctdh.ma_san_pham, sp.ten_san_pham, ctdh.so_luong, ctdh.gia " +
                 "FROM chi_tiet_don_hang ctdh JOIN san_pham sp ON ctdh.ma_san_pham = sp.ma_san_pham " +
                 "WHERE ctdh.ma_don_hang = ?";
-        try (Connection connection = DatabaseConnection.getConnectDB();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setInt(1, orderId);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    OrderDetailDTO orderDetailDTO = new OrderDetailDTO(
-                            resultSet.getInt("ma_don_hang"),
-                            resultSet.getInt("ma_san_pham"),
-                            resultSet.getString("ten_san_pham"),
-                            resultSet.getInt("so_luong"),
-                            resultSet.getDouble("gia")
-                    );
-                    orderDetailDTOList.add(orderDetailDTO);
+        
+        System.out.println("DEBUG: Searching for order details with orderId: " + orderId);
+        System.out.println("DEBUG: SQL Query: " + sql);
+        
+        try (Connection connection = DatabaseConnection.getConnectDB()) {
+            if (connection == null) {
+                System.err.println("ERROR: Database connection is null!");
+                return orderDetailDTOList;
+            }
+            System.out.println("DEBUG: Database connection successful");
+            
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, orderId);
+                System.out.println("DEBUG: Executing query with orderId: " + orderId);
+                
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    int count = 0;
+                    while (resultSet.next()) {
+                        count++;
+                        OrderDetailDTO orderDetailDTO = new OrderDetailDTO(
+                                resultSet.getInt("ma_don_hang"),
+                                resultSet.getInt("ma_san_pham"),
+                                resultSet.getString("ten_san_pham"),
+                                resultSet.getInt("so_luong"),
+                                resultSet.getDouble("gia")
+                        );
+                        orderDetailDTOList.add(orderDetailDTO);
+                        System.out.println("DEBUG: Found order detail - Product: " + orderDetailDTO.getProductName() + 
+                                         ", Quantity: " + orderDetailDTO.getQuantity() + 
+                                         ", Price: " + orderDetailDTO.getPrice());
+                    }
+                    System.out.println("DEBUG: Total order details found: " + count);
                 }
             }
         } catch (SQLException exception) {
+            System.err.println("ERROR: SQL Exception in findOrderDetailsWithProductName: " + exception.getMessage());
             exception.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("ERROR: General Exception in findOrderDetailsWithProductName: " + e.getMessage());
+            e.printStackTrace();
         }
         return orderDetailDTOList;
     }
+
+
 
     @Override
     public boolean deleteOrderItem(int orderId, int productId) {

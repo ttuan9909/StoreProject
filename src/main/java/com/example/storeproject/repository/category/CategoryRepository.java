@@ -1,7 +1,7 @@
 package com.example.storeproject.repository.category;
 
 import com.example.storeproject.entity.Category;
-import com.example.storeproject.repository.DBConnection;
+import com.example.storeproject.database.DatabaseConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ public class CategoryRepository implements ICategoryRepository {
         List<Category> categories = new ArrayList<>();
         String sql = "SELECT * FROM danh_muc ORDER BY ten_danh_muc";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             
@@ -32,7 +32,7 @@ public class CategoryRepository implements ICategoryRepository {
     public Category getCategoryById(int categoryId) {
         String sql = "SELECT * FROM danh_muc WHERE ma_danh_muc = ?";
         
-        try (Connection conn = DBConnection.getConnectDB();
+        try (Connection conn = DatabaseConnection.getConnectDB();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, categoryId);
