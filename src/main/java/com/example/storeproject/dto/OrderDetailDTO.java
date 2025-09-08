@@ -12,6 +12,14 @@ public class OrderDetailDTO {
     public OrderDetailDTO() {
     }
 
+    public OrderDetailDTO(int orderId, int productId, String productName, int quantity, double price) {
+        this.orderId = orderId;
+        this.productId = productId;
+        this.productName = productName;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
     public OrderDetailDTO(int orderId, int productId, String productName, int quantity, double price, String imageUrl) {
         this.orderId = orderId;
         this.productId = productId;

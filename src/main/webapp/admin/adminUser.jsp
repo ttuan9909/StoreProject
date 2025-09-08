@@ -191,10 +191,10 @@
     <aside class="ben_trai">
         <div class="ten_he">Bảng điều khiển quản trị</div>
         <nav class="menu">
-            <a class="muc" href="<%= ctx %>/admin/order">Đơn hàng</a>
-            <a class="muc" href="<%= ctx %>/admin/order?q=cho_xu_ly">Đơn chờ xử lý</a>
-            <a class="muc" href="<%= ctx %>/admin/order?q=da_duyet">Đơn đã duyệt</a>
-            <a class="muc" href="<%= ctx %>/products">Sản phẩm</a>
+            <a class="muc" href="<%= ctx %>/admin/orders">Đơn hàng</a>
+            <a class="muc" href="<%= ctx %>/admin/orders?q=cho_xu_ly">Đơn chờ xử lý</a>
+            <a class="muc" href="<%= ctx %>/admin/orders?q=da_duyet">Đơn đã duyệt</a>
+            <a class="muc" href="<%= ctx %>/admin/products">Sản phẩm</a>
             <a class="muc" href="<%= ctx %>/admin/categories">Danh mục sản phẩm</a>
             <a class="muc active" href="<%= ctx %>/admin/users">Người dùng</a>
             <a class="muc" href="<%= ctx %>/admin/discount">Khuyến mãi</a>

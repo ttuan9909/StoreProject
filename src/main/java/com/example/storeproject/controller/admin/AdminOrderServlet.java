@@ -15,7 +15,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "AdminOrderServlet", urlPatterns = {"/admin/order", "/admin/order/*"})
+@WebServlet(name = "AdminOrderServlet", urlPatterns = {"/admin/orders", "/admin/orders/*"})
 public class AdminOrderServlet extends HttpServlet {
     private static final IOrderService orderService = new OrderService();
 
@@ -57,9 +57,9 @@ public class AdminOrderServlet extends HttpServlet {
             int orderId = Integer.parseInt(orderIdParam);
             boolean updated = orderService.updateOrderStatus(orderId, "dang_xu_ly");
             if (updated) {
-                response.sendRedirect(request.getContextPath() + "/admin/order/detail/" + orderId);
+                response.sendRedirect(request.getContextPath() + "/admin/orders/detail/" + orderId);
             } else {
-                response.sendRedirect(request.getContextPath() + "/admin/order");
+                response.sendRedirect(request.getContextPath() + "/admin/orders");
             }
             return;
         }
@@ -69,7 +69,7 @@ public class AdminOrderServlet extends HttpServlet {
             int orderId = Integer.parseInt(orderIdParam);
             int productId = Integer.parseInt(productIdParam);
             orderService.deleteOrderItem(orderId, productId);
-            response.sendRedirect(request.getContextPath() + "/admin/order/detail/" + orderId);
+            response.sendRedirect(request.getContextPath() + "/admin/orders/detail/" + orderId);
             return;
         }
         response.sendError(HttpServletResponse.SC_BAD_REQUEST);
@@ -80,7 +80,7 @@ public class AdminOrderServlet extends HttpServlet {
         List<OrderDTO> orderDTOList = orderService.findOrders(keyword);
         request.setAttribute("orders", orderDTOList);
         request.setAttribute("q", keyword);
-        request.getRequestDispatcher("/Order-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/order/Order-list.jsp").forward(request, response);
     }
 
     private void showOrderDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -91,6 +91,6 @@ public class AdminOrderServlet extends HttpServlet {
         List<OrderDetailDTO> orderDetailDTOList = orderService.findOrderDetailsWithProductName(orderId);
         request.setAttribute("order", order);
         request.setAttribute("details", orderDetailDTOList);
-        request.getRequestDispatcher("/Order-detail.jsp").forward(request, response);
+        request.getRequestDispatcher("/order/Order-detail.jsp").forward(request, response);
     }
 }

@@ -33,9 +33,6 @@ dependencies {
     // JSTL for JSP
     implementation 'javax.servlet:jstl:1.2'
 
-    // JSTL
-    implementation("javax.servlet:jstl:1.2")
-
     // MySQL Connector
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")

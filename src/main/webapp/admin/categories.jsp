@@ -152,9 +152,9 @@
 <%--        </form>--%>
 
         <nav class="menu">
-            <a class="muc" href="${pageContext.request.contextPath}/admin/order">Đơn hàng</a>
-            <a class="muc" href="${pageContext.request.contextPath}/admin/order?q=cho_xu_ly">Đơn chờ xử lý</a>
-            <a class="muc" href="${pageContext.request.contextPath}/admin/order?q=da_duyet">Đơn đã duyệt</a>
+            <a class="muc" href="${pageContext.request.contextPath}/admin/orders">Đơn hàng</a>
+            <a class="muc" href="${pageContext.request.contextPath}/admin/orders?q=cho_xu_ly">Đơn chờ xử lý</a>
+            <a class="muc" href="${pageContext.request.contextPath}/admin/orders?q=da_duyet">Đơn đã duyệt</a>
             <a class="muc" href="${pageContext.request.contextPath}/admin/products">Sản phẩm</a>
             <a class="muc active" href="${pageContext.request.contextPath}/admin/categories">Danh mục sản phẩm</a>
             <a class="muc" href="${pageContext.request.contextPath}/admin/users">Người dùng</a>

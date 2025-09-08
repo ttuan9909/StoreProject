@@ -19,4 +19,5 @@ public interface IOrderService {
     List<OrderDetailDTO> findOrderDetailsWithProductName(int orderId);
     boolean deleteOrderItem(int orderId, int productId);
     List<OrderDetailDTO> getOrderDetailsByOrderId(int orderId);
+    List<OrderDTO> findOrdersByStatus(String keyword, String trim);
 }

@@ -101,7 +101,13 @@
         <c:forEach var="product" items="${products}">
             <div class="col-md-3 mb-4">
                 <div class="card product-card h-100">
-                    <img src="${product.image}" class="card-img-top product-image" alt="${product.productName}">
+                    <img
+                            src="${empty product.image ? pageContext.request.contextPath + '/assets/img/no-image-200.png' : product.image}"
+                            class="card-img-top product-image"
+                            alt="${product.productName}"
+                            onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/img/no-image-200.png';"
+                    />
+
                     <div class="card-body d-flex flex-column">
                         <h6 class="card-title">${product.productName}</h6>
                         <p class="card-text text-muted small">

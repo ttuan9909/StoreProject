@@ -19,4 +19,5 @@ public interface IOrderRepository {
     List<OrderDTO> findOrdersAll();
     List<OrderDetailDTO> findOrderDetailsWithProductName(int orderId);
     boolean deleteOrderItem(int orderId, int productId);
+    List<OrderDTO> findOrdersByStatus(String keyword, String status);
 }
